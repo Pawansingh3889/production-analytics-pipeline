@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: fct_daily_yield
+    description: Daily production yield and waste analysis per line
+    columns:
+      - name: production_date
+        tests:
+          - not_null
+      - name: avg_yield_pct
+        tests:
+          - not_null
+
+  - name: fct_temp_breaches
+    description: Temperature breach summary for HACCP compliance
+    columns:
+      - name: reading_date
+        tests:
+          - not_null
+      - name: location
+        tests:
+          - not_null
+      - name: total_readings
+        tests:
+          - not_null
+
+  - name: fct_quality_summary
+    description: Non-conformance trends by type and severity
+    columns:
+      - name: nc_date
+        tests:
+          - not_null
+
+  - name: fct_shift_productivity
+    description: Shift-level labour productivity KPIs
+    columns:
+      - name: shift_date
+        tests:
+          - not_null
+      - name: kg_per_head
+        description: Output per operative - key efficiency metric

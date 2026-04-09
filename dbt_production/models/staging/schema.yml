@@ -1,0 +1,58 @@
+version: 2
+
+models:
+  - name: stg_runs
+    description: Cleaned production run data with calculated yield
+    columns:
+      - name: run_number
+        tests:
+          - not_null
+          - unique
+      - name: production_date
+        tests:
+          - not_null
+      - name: product_code
+        tests:
+          - not_null
+      - name: yield_pct
+        description: Actual/target percentage, NULL for incomplete runs
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+              config:
+                where: "yield_pct IS NOT NULL"
+
+  - name: stg_temperature
+    description: Temperature readings with breach detection
+    columns:
+      - name: log_id
+        tests:
+          - not_null
+          - unique
+      - name: location
+        tests:
+          - not_null
+      - name: temp_celsius
+        tests:
+          - not_null
+      - name: is_breach
+        tests:
+          - accepted_values:
+              values: [0, 1]
+
+  - name: stg_non_conformance
+    description: Quality non-conformance records
+    columns:
+      - name: nc_id
+        tests:
+          - not_null
+          - unique
+      - name: severity
+        tests:
+          - accepted_values:
+              values: ['critical', 'major', 'minor']
+      - name: status
+        tests:
+          - accepted_values:
+              values: ['open', 'investigating', 'closed']

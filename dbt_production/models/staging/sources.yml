@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: production
+    schema: production
+    tables:
+      - name: runs
+      - name: products
+      - name: prod_lines
+      - name: transactions
+      - name: run_totals
+      - name: traceability
+      - name: temperature_logs
+      - name: non_conformance
+      - name: case_verification
+      - name: despatch
+      - name: shifts
