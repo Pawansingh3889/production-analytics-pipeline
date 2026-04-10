@@ -1,0 +1,124 @@
+# AGENTS.md
+
+Context for AI assistants working on this codebase.
+
+## Purpose
+
+Incremental ETL pipeline that extracts fish production data from a legacy SQL Server ERP system (RunNumber tables), validates it with Pydantic, transforms it with dbt, and serves it via SQL queries and dashboards. The pipeline is designed for a fish processing factory and handles species parsing, yield tracking, temperature compliance, quality records, and labour productivity.
+
+## Architecture
+
+```
+ERP (SQL Server) -> Extract (watermark-based) -> Validate (Pydantic) -> Clean -> Load (Parquet / DB)
+                                                                              -> dbt staging -> mart tables
+```
+
+1. **Extract** -- Watermark-based incremental load. Reads only rows where `Updated > last_run_timestamp`. Batches of 5,000 rows. Supports full reload (`--full`) and Parquet output (`--to-parquet`).
+2. **Validate** -- Pydantic models parse and enforce types. Species and product type are extracted from free-text Description fields via regex. Invalid rows go to `data/rejected_rows.csv`.
+3. **Clean** -- Column renaming and type coercion (booleans from mixed int/str ERP representations).
+4. **Load** -- Upsert to target database or write Parquet files. Pipeline state (watermark) persisted in `data/pipeline_state.json`.
+5. **Transform** -- dbt staging views clean raw data; mart tables aggregate into analysis-ready outputs.
+
+## Key Files
+
+| File | Role |
+|---|---|
+| `workflow/daily_run.py` | Orchestrator -- runs the full daily ETL pipeline |
+| `extract/extractor.py` | Query builder, batch fetcher, SQL safety guards |
+| `extract/incremental.py` | Incremental load entry point (watermark logic) |
+| `extract/cleaner.py` | Column renaming and data cleaning |
+| `extract/loader.py` | Database upsert and Parquet writer |
+| `extract/config.py` | Environment-based configuration, SA credential blocking |
+| `models/run_number.py` | Pydantic model (`RunNumberRecord`) with species/product parsing |
+| `extract/sources/run_number.py` | RunNumber source table definition |
+| `extract/sources/transactions.py` | SI_OCM_TRANS source table definition |
+| `extract/sources/plu.py` | SI_OCM_PLU source table definition |
+| `extract/sources/totals.py` | SI_OCM_TOTALS source table definition |
+
+## Source Tables
+
+Four ERP source tables are extracted:
+
+| Source Table | Source File |
+|---|---|
+| `RunNumber` | `extract/sources/run_number.py` |
+| `SI_OCM_TRANS` | `extract/sources/transactions.py` |
+| `SI_OCM_PLU` | `extract/sources/plu.py` |
+| `SI_OCM_TOTALS` | `extract/sources/totals.py` |
+
+## dbt Models
+
+Located in `dbt_production/models/`. Project config in `dbt_production/dbt_project.yml`.
+
+### Staging (3 views)
+
+- `stg_runs` -- Cleaned production runs with calculated yield percentage
+- `stg_temperature` -- Temperature readings with breach detection flags
+- `stg_non_conformance` -- Quality records with days-to-close calculation
+
+### Marts (4 tables)
+
+- `fct_daily_yield` -- Daily yield and waste by line, product, customer
+- `fct_temp_breaches` -- HACCP temperature breach summary by location
+- `fct_quality_summary` -- Non-conformance trends by type, severity, closure rate
+- `fct_shift_productivity` -- Labour KPIs (kg/head, kg/hour, overtime percentage)
+
+## Docker Sandbox
+
+- `docker-compose.yml` -- SQL Server container isolated from the real ERP
+- `scripts/setup_sandbox.py` -- Bootstrap script (refuses non-localhost targets)
+- `scripts/init_sandbox.sql` -- Creates a read-only database user
+
+## Tests
+
+53 tests across three files. Run with:
+
+```
+python -m pytest tests/ -v
+```
+
+Test areas:
+- `tests/test_models.py` -- Pydantic validation, species parsing (9 species), product type parsing (11 types), boolean coercion, description uppercasing
+- `tests/test_extraction.py` -- Query building (full vs incremental), state persistence, row validation (valid/invalid/mixed batches)
+- `tests/test_safety.py` -- SELECT * blocking, SQL injection prevention, write keyword detection, SA credential rejection
+
+## Safety Rules
+
+These are non-negotiable. Every change must preserve all six safety layers:
+
+1. **No SELECT *** -- All queries must list explicit columns. The query validator in `extract/extractor.py` blocks `SELECT *`.
+2. **No SA credentials** -- `extract/config.py` rejects connection strings containing SA or admin credentials.
+3. **Read-only queries** -- The query validator blocks write keywords: DROP, DELETE, INSERT, UPDATE, ALTER, TRUNCATE, EXEC, xp_, sp_.
+4. **SQL injection guards** -- `extract/extractor.py` blocks semicolons, comment sequences (`--`, `/*`), and `xp_cmdshell`.
+5. **Docker isolation** -- The sandbox container is separate from the production ERP.
+6. **Read-only DB user** -- The sandbox user has DENY on INSERT, UPDATE, DELETE, ALTER.
+
+When modifying `extract/extractor.py`, always run `tests/test_safety.py` to confirm guards are intact.
+
+## Conventions
+
+- **Clean columns**: `snake_case` (e.g., `run_number`, `species_code`)
+- **ERP source columns**: `PascalCase` preserved as-is from the ERP (e.g., `RunNumber`, `Description`, `Updated`)
+- **Schema enforcement**: All data passes through Pydantic models before loading. Add or modify models in `models/run_number.py`.
+- **Environment config**: `SOURCE_DB`, `TARGET_DB`, `STATE_FILE` environment variables. Defaults point to local SQLite for development.
+- **Batch size**: 5,000 rows default, configurable.
+- **Rejected rows**: Written to `data/rejected_rows.csv` for manual investigation.
+
+## Running the Pipeline
+
+```bash
+# Incremental load (default)
+python -m extract.incremental
+
+# Full reload
+python -m extract.incremental --full
+
+# Output to Parquet
+python -m extract.incremental --to-parquet
+
+# Daily orchestration
+python workflow/daily_run.py
+
+# Run tests
+python -m pytest tests/ -v
+```
