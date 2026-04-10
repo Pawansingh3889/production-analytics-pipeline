@@ -1,3 +1,7 @@
+![CI](https://github.com/Pawansingh3889/production-analytics-pipeline/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.11+-blue)
+![dbt](https://img.shields.io/badge/dbt-1.11-orange)
+
 # Production Analytics Pipeline
 
 dbt analytics pipeline for fish production data. Models yield, waste, temperature compliance, and shift productivity from ERP transaction data.
