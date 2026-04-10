@@ -56,6 +56,9 @@ def extract_table(
     Returns:
         DataFrame with extracted rows
     """
+    # Safety: validate query is read-only
+    _validate_extraction(table, columns, watermark_col)
+
     cols = ", ".join(columns)
     query = f"SELECT {cols} FROM {table}"
     if watermark_value:
@@ -78,6 +81,66 @@ def extract_table(
         return pd.DataFrame(columns=columns)
 
     return pd.concat(chunks, ignore_index=True)
+
+
+def _validate_extraction(table: str, columns: list[str], watermark_col: str) -> None:
+    """Safety checks before any extraction query runs.
+
+    Prevents:
+    - SQL injection via table/column names
+    - SELECT * (must specify columns)
+    - Write operations (only SELECT allowed)
+    - Wildcard columns
+    """
+    import re
+
+    # Block dangerous characters (always blocked regardless of context)
+    CHAR_BLOCKED = [";", "--", "/*", "*/", "xp_", "sp_"]
+
+    # Block dangerous keywords (matched as whole words to avoid false positives
+    # like "Updated" matching "UPDATE")
+    KEYWORD_BLOCKED = ["DROP", "DELETE", "INSERT", "UPDATE", "ALTER",
+                       "TRUNCATE", "EXEC", "EXECUTE"]
+
+    all_names = [table, watermark_col] + columns
+    for name in all_names:
+        # Check dangerous characters
+        for blocked in CHAR_BLOCKED:
+            if blocked in name:
+                raise ValueError(
+                    f"BLOCKED: '{name}' contains forbidden character '{blocked}'. "
+                    f"This extractor is read-only."
+                )
+
+        # Check dangerous keywords (whole word match)
+        for blocked in KEYWORD_BLOCKED:
+            pattern = rf"\b{re.escape(blocked)}\b"
+            if re.search(pattern, name, re.IGNORECASE):
+                raise ValueError(
+                    f"BLOCKED: '{name}' contains forbidden keyword '{blocked}'. "
+                    f"This extractor is read-only."
+                )
+
+    # Block SELECT *
+    if "*" in columns:
+        raise ValueError(
+            "SELECT * is not allowed. Specify exact columns to extract. "
+            "varchar(max) columns can crash your pipeline memory."
+        )
+
+    # Block empty columns
+    if not columns:
+        raise ValueError("No columns specified for extraction.")
+
+    # Log the query for audit trail
+    _log_query(table, columns, watermark_col)
+
+
+def _log_query(table: str, columns: list[str], watermark_col: str) -> None:
+    """Write extraction query to audit log."""
+    import logging
+    log = logging.getLogger("extractor.audit")
+    log.info(f"EXTRACT {table} [{len(columns)} cols] watermark={watermark_col}")
 
 
 def get_watermark(table: str) -> Optional[str]:

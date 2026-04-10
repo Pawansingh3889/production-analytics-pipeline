@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  # SQL Server sandbox — isolated copy of ERP schema
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: erp_sandbox
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "SandboxP@ss123"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/lib/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "SandboxP@ss123" -Q "SELECT 1" -C -No || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # DuckDB analytics — lightweight local warehouse
+  duckdb:
+    image: python:3.11-slim
+    container_name: duckdb_warehouse
+    working_dir: /app
+    volumes:
+      - .:/app
+      - duckdb_data:/app/data/duckdb
+    command: >
+      bash -c "pip install duckdb pandas pyarrow sqlalchemy pydantic --quiet &&
+               echo 'DuckDB warehouse ready. Run: docker exec -it duckdb_warehouse python' &&
+               tail -f /dev/null"
+    restart: unless-stopped
+
+volumes:
+  mssql_data:
+  duckdb_data:
