@@ -10,8 +10,8 @@ Incremental ETL pipeline for fish production ERP data. Extracts from legacy SQL 
 
 ```
 ERP (SQL Server)        Python              dbt                 Analyst
- RunNumber table  -->  extract/   -->  staging views  -->  10 SQL queries
-                       incremental.py   mart tables
+ RunNumber table  -->  extract/   -->  staging views  -->  production queries
+                       incremental.py   mart tables         + dashboards
 ```
 
 ### Extract
@@ -28,7 +28,7 @@ dbt staging models clean and enrich raw data; mart models aggregate into analysi
 
 ### Serve
 
-10 interview-ready SQL queries (`sql/interview_queries.sql`) covering daily yield, traceability, temperature audits, giveaway analysis, shift productivity, non-conformance tracking, order fulfilment, allergen changeovers (LAG), species ranking (RANK), and cumulative weekly production (running totals).
+10 production SQL queries (`sql/production_queries.sql`) covering daily yield, traceability, temperature audits, giveaway analysis, shift productivity, non-conformance tracking, order fulfilment, allergen changeovers (LAG), species ranking (RANK), and cumulative weekly production (running totals).
 
 ## Schema
 

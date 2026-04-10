@@ -1,6 +1,5 @@
 -- ============================================================
--- Interview-Ready SQL Queries: Fish Production Analytics
--- Based on real SI Integreater ERP patterns
+-- Production SQL Queries: Fish Processing Analytics
 -- ============================================================
 
 
