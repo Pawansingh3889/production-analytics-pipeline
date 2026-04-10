@@ -12,6 +12,10 @@ Incremental ETL pipeline for fish production ERP data. Extracts from legacy SQL 
 ERP (SQL Server)        Python              dbt                 Analyst
  RunNumber table  -->  extract/   -->  staging views  -->  production queries
                        incremental.py   mart tables         + dashboards
+
+docker-compose.yml          # SQL Server sandbox container
+scripts/init_sandbox.sql    # Read-only user setup
+scripts/setup_sandbox.py    # Sandbox bootstrap script
 ```
 
 ### Extract
@@ -86,14 +90,28 @@ python -m extract.incremental --to-parquet  # save to parquet
 
 Configuration is via environment variables (`SOURCE_DB`, `TARGET_DB`, `STATE_FILE`). Defaults point to local SQLite databases for development.
 
+## Safety
+
+6 layers of protection prevent accidental writes to the source ERP:
+
+| Layer | Protection | File |
+|---|---|---|
+| Config guard | Blocks SA/admin credentials in SOURCE_DB | `extract/config.py` |
+| Query validator | Blocks SELECT *, SQL injection, write keywords (DROP/DELETE/INSERT/UPDATE/ALTER/TRUNCATE/EXEC/xp_/sp_) | `extract/extractor.py` |
+| Pydantic models | Rejects bad data types and empty primary keys | `models/run_number.py` |
+| Docker sandbox | Isolates SQL Server container from real ERP | `docker-compose.yml` |
+| Read-only user | DENY INSERT/UPDATE/DELETE/ALTER at database level | `scripts/init_sandbox.sql` |
+| Setup script | Refuses to run against non-localhost targets | `scripts/setup_sandbox.py` |
+
 ## Tests
 
-38 tests covering three areas:
+53 tests covering four areas:
 
 - **Pydantic models** -- Valid record creation, empty run number rejection, description uppercasing, boolean coercion from int and string, optional field defaults, smoked/breaded product type priority.
 - **Species parsing** -- Parametrised tests across 9 species (hake, salmon, cod, haddock, mackerel, tuna, plaice, pollock, unknown).
 - **Product type parsing** -- Parametrised tests across 11 product types (fillet, loin, portion, steak, smoked, breaded, battered, fish cake, goujon, whole, unknown).
 - **Extraction pipeline** -- Query building (full reload vs incremental), state persistence (save/load), row validation (valid pass, invalid rejected, mixed batches).
+- **Safety guards** -- SELECT * blocking, SQL injection prevention (semicolons, comments, xp_cmdshell), write keyword detection with whole-word matching (UPDATE vs Updated), SA credential rejection.
 
 ```
 pytest -v
