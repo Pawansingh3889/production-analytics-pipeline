@@ -96,13 +96,99 @@ def seed():
         rows
     )
 
+    # === SI_OCM_TRANS (per-pack weights) ===
+    c.executescript("""
+        DROP TABLE IF EXISTS SI_OCM_TRANS;
+        CREATE TABLE SI_OCM_TRANS (
+            TransNo INTEGER PRIMARY KEY AUTOINCREMENT,
+            RunNumber TEXT, TransDate TEXT, ProductCode TEXT,
+            Weight REAL, TargetWeight REAL, Tare REAL,
+            NetWeight REAL, Overweight REAL, Barcode TEXT,
+            LabelPrinted INTEGER, ScannerPass INTEGER,
+            ProdLine TEXT, OperatorID TEXT
+        );
+    """)
+    trans_count = 0
+    for row in rows:
+        run_num, date_str, desc, pcode, pline = row[0], row[1], row[2], row[3], row[4]
+        target_wt = random.choice([130, 150, 170, 200, 280, 300, 400, 500])
+        for _ in range(random.randint(10, 25)):
+            wt = round(target_wt + random.uniform(-8, 12), 1)
+            tare = round(random.uniform(3, 8), 1)
+            net = round(wt - tare, 1)
+            over = round(net - target_wt, 1)
+            c.execute(
+                "INSERT INTO SI_OCM_TRANS (RunNumber, TransDate, ProductCode, Weight, TargetWeight, Tare, NetWeight, Overweight, Barcode, LabelPrinted, ScannerPass, ProdLine, OperatorID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (run_num, date_str, pcode, wt, target_wt, tare, net, over,
+                 f"501234{random.randint(1000000,9999999)}", 1,
+                 1 if random.random() > 0.02 else 0, pline, f"OP{random.randint(1,8):02d}")
+            )
+            trans_count += 1
+
+    # === SI_OCM_PLU (product master) ===
+    c.executescript("""
+        DROP TABLE IF EXISTS SI_OCM_PLU;
+        CREATE TABLE SI_OCM_PLU (
+            PLUNumber INTEGER PRIMARY KEY AUTOINCREMENT,
+            Description TEXT, ProductCode TEXT, Category TEXT,
+            Species TEXT, PackSize REAL, ShelfLife INTEGER,
+            Allergens TEXT, Active INTEGER DEFAULT 1, Updated TEXT
+        );
+    """)
+    species_map = {
+        'HAKE': 'hake', 'SEABASS': 'seabass', 'SALMON': 'salmon',
+        'COD': 'cod', 'HADDOCK': 'haddock', 'MACKEREL': 'mackerel',
+        'PRAWN': 'prawn', 'TUNA': 'tuna', 'PLAICE': 'plaice',
+        'SOLE': 'sole', 'TROUT': 'trout', 'POLLOCK': 'pollock',
+    }
+    for prod in products:
+        desc, pcode, pline = prod
+        species = None
+        for k, v in species_map.items():
+            if k in desc.upper():
+                species = v
+                break
+        c.execute(
+            "INSERT INTO SI_OCM_PLU (Description, ProductCode, Category, Species, PackSize, ShelfLife, Allergens, Updated) VALUES (?,?,?,?,?,?,?,?)",
+            (desc, pcode, 'fish', species, random.choice([130, 150, 170, 200, 280, 300, 400]),
+             random.randint(4, 14), 'fish', now.strftime("%Y-%m-%d %H:%M:%S"))
+        )
+
+    # === SI_OCM_TOTALS (run aggregates) ===
+    c.executescript("""
+        DROP TABLE IF EXISTS SI_OCM_TOTALS;
+        CREATE TABLE SI_OCM_TOTALS (
+            RunNumber TEXT PRIMARY KEY, TotalPacks INTEGER,
+            TotalWeight REAL, AvgWeight REAL, MinWeight REAL,
+            MaxWeight REAL, StdDev REAL, Giveaway REAL,
+            GiveawayPct REAL, RejectCount INTEGER,
+            DowntimeMins INTEGER, Updated TEXT
+        );
+    """)
+    for row in rows:
+        run_num = row[0]
+        packs = random.randint(10, 30)
+        avg_wt = random.uniform(190, 210)
+        waste = random.uniform(5, 40)
+        c.execute(
+            "INSERT INTO SI_OCM_TOTALS VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            (run_num, packs, round(packs * avg_wt / 1000, 1),
+             round(avg_wt, 1), round(avg_wt - 10, 1), round(avg_wt + 10, 1),
+             round(random.uniform(1, 5), 1), round(waste, 1),
+             round(waste / (packs * avg_wt / 1000) * 100, 1),
+             random.randint(0, 3), random.randint(0, 20),
+             row[10])  # Updated from RunNumber
+        )
+
     conn.commit()
     conn.close()
 
     print(f"Mock ERP database created: {DB_PATH}")
     print(f"  RunNumber rows: {len(rows)}")
+    print(f"  SI_OCM_TRANS rows: {trans_count}")
+    print(f"  SI_OCM_PLU rows: {len(products)}")
+    print(f"  SI_OCM_TOTALS rows: {len(rows)}")
     print(f"  Date range: {(now - timedelta(days=90)).strftime('%Y-%m-%d')} to {now.strftime('%Y-%m-%d')}")
-    print(f"  Products: {len(products)}")
 
 
 if __name__ == "__main__":
