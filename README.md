@@ -4,7 +4,7 @@
 
 # Production Analytics Pipeline
 
-Incremental ETL pipeline for fish production ERP data. Extracts from legacy SQL Server RunNumber tables, validates with Pydantic, transforms with dbt, serves via SQL queries.
+Incremental ETL pipeline for fish production data. Extracts from legacy ERP tables, validates with Pydantic, transforms with dbt. Handles batch-centric production runs (one batch, multiple products), waterfall yield tracking across RSPCA/GG/Almaria tiers, batch lineage for OCM scan-back traceability, shelf life management (0/+1/+2/+3 adjustments), and paperwork digitisation.
 
 ## Architecture
 
@@ -33,6 +33,59 @@ dbt staging models clean and enrich raw data; mart models aggregate into analysi
 ### Serve
 
 10 production SQL queries (`sql/production_queries.sql`) covering daily yield, traceability, temperature audits, giveaway analysis, shift productivity, non-conformance tracking, order fulfilment, allergen changeovers (LAG), species ranking (RANK), and cumulative weekly production (running totals).
+
+## Production Context
+
+### Batch-Centric Runs
+
+One batch feeds one production run, and multiple products come out of that single run (e.g. RSPCA 120g, RSPCA 240g, GG 280g, Family Pack). The batch code ties every output product back to its source material.
+
+Exception products (Family Pack, marinades, Simply Salmon) use separate runs where multiple batch codes are documented on the paperwork. These require explicit batch-to-run mapping during data entry.
+
+### Waterfall Yield
+
+Production follows a three-tier waterfall where raw material cascades downward through quality tiers:
+
+| Tier | Examples | Notes |
+|---|---|---|
+| Tier 1 (RSPCA) | 120g premium, 240g portions | Highest certification, allocated first |
+| Tier 2 (GG) | 140g standard, marinades | Standard tier plus value-added |
+| Tier 3 (Almaria / Simply Salmon) | Simply Salmon catch-all | Absorbs remaining material |
+
+**Golden rule:** RSPCA material cascades down to GG or Almaria, but GG material never goes up to RSPCA. Tails are never packed into RSPCA products.
+
+### Shelf Life
+
+| Scenario | Calculation |
+|---|---|
+| Standard | Pack date + 9 days |
+| Rubber clock (+1) | Pack date + 10 days |
+| Superchill (+2) | Pack date + 11 days |
+| Superchill (+3) | Pack date + 12 days |
+| Freeze down | Day 13+ triggers freeze down |
+
+### Paperwork
+
+Production paperwork captured during digitisation includes:
+
+- **Baskets** -- physical container tracking through the line
+- **Start/end labels** -- printed from OCM system for scan-back traceability
+- **Batch codes with kg per batch** -- weight reconciliation against ERP totals
+
+## Compliance Checks
+
+Automated checks run against every production run:
+
+| Check | Severity | Description |
+|---|---|---|
+| GG batch in RSPCA product | CRITICAL | GG-certified material must not appear in RSPCA-labelled output |
+| Tails in RSPCA product | CRITICAL | Tail cuts are excluded from RSPCA tier products |
+| Species mismatch | CRITICAL | Product species must match the batch species declaration |
+| OCM scan-back without parent mapping | MAJOR | Every OCM label must trace back to a parent batch code |
+| Yield below 90% | WARNING | Flags runs with unusually low yield for investigation |
+| Temperature breach | CRITICAL | HACCP temperature reading outside permitted range |
+| Giveaway exceeding 3% | WARNING | Pack weight giveaway above target triggers review |
+| Label gap detection | WARNING | Missing label sequence numbers indicate potential traceability gaps |
 
 ## Schema
 
