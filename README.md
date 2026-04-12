@@ -288,6 +288,27 @@ Opens at [http://localhost:3000](http://localhost:3000). Requires the FastAPI ba
 - Graceful "API unavailable" state when backend is offline
 - Dark theme (bg-gray-950)
 
+## Infrastructure as Code
+
+OpenTofu (Terraform-compatible) configuration in `infra/` manages the containerised deployment:
+
+| Resource | Description |
+|---|---|
+| SQL Server sandbox | `mcr.microsoft.com/mssql/server:2022-latest` on port 1433 |
+| FastAPI container | Production API built from `infra/Dockerfile.api` on port 8000 |
+| Warehouse volume | Persistent Docker volume for DuckDB/SQLite data |
+
+### Commands
+
+```bash
+make infra-init     # initialise OpenTofu providers
+make infra-plan     # preview infrastructure changes
+make infra-apply    # create/update containers and volumes
+make infra-destroy  # tear down all managed resources
+```
+
+Requires [OpenTofu](https://opentofu.org/) installed locally. State files and the `.terraform/` directory are excluded from version control via `infra/.gitignore`.
+
 ## Stack
 
 | Component | Technology |
@@ -298,6 +319,7 @@ Opens at [http://localhost:3000](http://localhost:3000). Requires the FastAPI ba
 | Transformation | dbt |
 | Orchestration | Prefect 3 |
 | API | FastAPI + Uvicorn |
+| Infrastructure | OpenTofu (Terraform-compatible) |
 | Testing | pytest |
 | Error monitoring | Sentry (opt-in via `SENTRY_DSN`) |
 | Dashboard | Next.js 15 + Tailwind CSS + Recharts |

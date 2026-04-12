@@ -1,4 +1,4 @@
-.PHONY: setup test run seed clean prefect-run prefect-serve export-powerbi lint format typecheck api dashboard-install dashboard-dev
+.PHONY: setup test run seed clean prefect-run prefect-serve export-powerbi lint format typecheck api dashboard-install dashboard-dev infra-init infra-plan infra-apply infra-destroy n8n-start n8n-stop
 
 setup:
 	pip install -r requirements.txt
@@ -41,3 +41,21 @@ dashboard-dev:
 
 clean:
 	rm -rf data/*.db data/pipeline_state.json __pycache__
+
+n8n-start:
+	cd n8n && docker-compose up -d
+
+n8n-stop:
+	cd n8n && docker-compose down
+
+infra-init:
+	cd infra && tofu init
+
+infra-plan:
+	cd infra && tofu plan
+
+infra-apply:
+	cd infra && tofu apply -auto-approve
+
+infra-destroy:
+	cd infra && tofu destroy -auto-approve

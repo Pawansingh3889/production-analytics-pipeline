@@ -72,6 +72,24 @@ Located in `dbt_production/models/`. Project config in `dbt_production/dbt_proje
 - `scripts/setup_sandbox.py` -- Bootstrap script (refuses non-localhost targets)
 - `scripts/init_sandbox.sql` -- Creates a read-only database user
 
+## Infrastructure as Code (OpenTofu)
+
+OpenTofu (Terraform-compatible) config in `infra/` manages containerised deployment via the Docker provider.
+
+| File | Role |
+|---|---|
+| `infra/main.tf` | Provider config, SQL Server sandbox container, FastAPI container, warehouse volume |
+| `infra/outputs.tf` | Exposes API URL and sandbox port |
+| `infra/Dockerfile.api` | Docker image for the FastAPI service |
+| `infra/.gitignore` | Excludes `.terraform/`, state files, lock file |
+
+Key resources:
+- `docker_container.erp_sandbox` -- SQL Server 2022 Developer Edition on port 1433
+- `docker_container.api` -- FastAPI app on port 8000, depends on the sandbox container
+- `docker_volume.warehouse_data` -- Persistent volume mounted at `/app/data`
+
+Make targets: `infra-init`, `infra-plan`, `infra-apply`, `infra-destroy`.
+
 ## Tests
 
 53 tests across three files. Run with:
