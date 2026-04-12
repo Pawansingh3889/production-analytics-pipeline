@@ -108,13 +108,23 @@ def seed():
             ProdLine TEXT, OperatorID TEXT
         );
     """)
+    # Map product codes to realistic target weights
+    product_weights = {
+        'HAKE-FIL-01': 240, 'SBAS-FIL-02': 180, 'SAL-POR-03': 130,
+        'COD-FIL-04': 200, 'HAD-SMK-05': 170, 'COD-LON-06': 280,
+        'COD-GOU-07': 300, 'SAL-DAR-08': 200, 'MAC-FIL-09': 150,
+        'PRN-RNG-10': 200, 'MIX-PIE-11': 400, 'PLC-FIL-12': 240,
+        'TUN-STK-13': 150, 'SOL-FIL-14': 200, 'POL-FIL-15': 180,
+    }
     trans_count = 0
     for row in rows:
         run_num, date_str, desc, pcode, pline = row[0], row[1], row[2], row[3], row[4]
-        target_wt = random.choice([130, 150, 170, 200, 280, 300, 400, 500])
+        target_wt = product_weights.get(pcode, 200)
         for _ in range(random.randint(10, 25)):
-            wt = round(target_wt + random.uniform(-8, 12), 1)
-            tare = round(random.uniform(3, 8), 1)
+            # Realistic: most packs 1-5g over target, occasional 1-3g under
+            wt = round(target_wt + random.gauss(3, 4), 1)
+            wt = max(target_wt - 5, wt)  # minimum weight close to target
+            tare = round(random.uniform(4, 6), 1)  # tray tare ~5g
             net = round(wt - tare, 1)
             over = round(net - target_wt, 1)
             c.execute(
@@ -167,16 +177,26 @@ def seed():
     """)
     for row in rows:
         run_num = row[0]
-        packs = random.randint(10, 30)
-        avg_wt = random.uniform(190, 210)
-        waste = random.uniform(5, 40)
+        # Realistic fish production: 80-400 packs per run
+        packs = random.randint(80, 400)
+        # Target weight matches product (130g-500g)
+        target_wt = random.choice([130, 150, 170, 200, 240, 280, 300, 400, 500])
+        # Avg weight is slightly above target (giveaway is overweight)
+        avg_wt = target_wt + random.uniform(1, 8)
+        total_kg = round(packs * avg_wt / 1000, 1)
+        # Giveaway: realistic 0.5% to 4% of total weight
+        giveaway_pct = round(random.uniform(0.5, 4.0), 1)
+        giveaway_kg = round(total_kg * giveaway_pct / 100, 2)
+        # Std dev realistic: 3-12g
+        std_dev = round(random.uniform(3, 12), 1)
+        # Rejects: 0-5% of packs
+        reject_count = random.randint(0, max(1, int(packs * 0.05)))
         c.execute(
             "INSERT INTO SI_OCM_TOTALS VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-            (run_num, packs, round(packs * avg_wt / 1000, 1),
-             round(avg_wt, 1), round(avg_wt - 10, 1), round(avg_wt + 10, 1),
-             round(random.uniform(1, 5), 1), round(waste, 1),
-             round(waste / (packs * avg_wt / 1000) * 100, 1),
-             random.randint(0, 3), random.randint(0, 20),
+            (run_num, packs, total_kg,
+             round(avg_wt, 1), round(avg_wt - std_dev * 2, 1), round(avg_wt + std_dev * 2, 1),
+             std_dev, giveaway_kg, giveaway_pct,
+             reject_count, random.randint(0, 20),
              row[10])  # Updated from RunNumber
         )
 
