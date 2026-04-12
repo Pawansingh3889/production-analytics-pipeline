@@ -10,3 +10,9 @@ target/
 dbt_packages/
 logs/
 data/
+
+# AI tools
+.claude/
+.cursorrules
+.continue/
+.aider*
