@@ -309,6 +309,30 @@ make infra-destroy  # tear down all managed resources
 
 Requires [OpenTofu](https://opentofu.org/) installed locally. State files and the `.terraform/` directory are excluded from version control via `infra/.gitignore`.
 
+## Visual Workflows
+
+n8n provides a visual workflow editor for non-technical users (shift managers, planners, QA leads) to build automation on top of the FastAPI endpoints without writing code.
+
+### Run
+
+```bash
+make n8n-start    # start n8n container
+```
+
+Open [http://localhost:5678](http://localhost:5678) (admin / production2026). Requires the FastAPI backend running on port 8000.
+
+### Suggested Workflows
+
+| Workflow | Schedule | What It Does |
+|---|---|---|
+| Daily Data Extraction | Every day at 06:00 | POST /pipeline/run, wait, check /health, notify |
+| Temperature Alert | Every 15 minutes | GET /temperature/breaches, alert if any found |
+| Compliance Check | Every hour | GET /compliance/checks, filter critical, alert |
+| Weekly Yield Report | Every Monday 08:00 | GET /yield/daily?days=7, format HTML table, email |
+| Shelf Life Monitor | Every 4 hours | GET /shelf-life/expiring, alert if approaching day 12 |
+
+All workflows connect to the FastAPI backend (`http://localhost:8000`). Build them visually in the n8n drag-and-drop editor.
+
 ## Stack
 
 | Component | Technology |
@@ -319,6 +343,7 @@ Requires [OpenTofu](https://opentofu.org/) installed locally. State files and th
 | Transformation | dbt |
 | Orchestration | Prefect 3 |
 | API | FastAPI + Uvicorn |
+| Visual workflows | n8n |
 | Infrastructure | OpenTofu (Terraform-compatible) |
 | Testing | pytest |
 | Error monitoring | Sentry (opt-in via `SENTRY_DSN`) |

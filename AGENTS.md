@@ -145,6 +145,10 @@ The `POST /pipeline/run` endpoint triggers the daily workflow in a background th
 
 `extract/monitoring.py` provides optional Sentry integration. Set `SENTRY_DSN` environment variable to enable; if unset, all monitoring calls are silent no-ops. The module is imported in `workflow/daily_run.py`, `workflow/prefect_flow.py`, and `api/main.py`. It captures pipeline failures, API errors, and extraction issues. Traces sample rate is 0.1. The `ENVIRONMENT` env var controls the Sentry environment tag (defaults to `development`).
 
+## Visual Workflows (n8n)
+
+`n8n/docker-compose.yml` runs an n8n container on port 5678 for visual workflow automation. Non-technical users (shift managers, planners, QA leads) can build drag-and-drop workflows that call the FastAPI endpoints without writing code. Start with `make n8n-start`, stop with `make n8n-stop`. Five suggested workflows are documented in `n8n/README.md`: daily data extraction, temperature alerts, compliance checks, weekly yield reports, and shelf life monitoring. All workflows connect to `http://localhost:8000`.
+
 ## Running the Pipeline
 
 ```bash
