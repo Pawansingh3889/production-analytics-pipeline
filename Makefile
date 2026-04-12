@@ -1,4 +1,4 @@
-.PHONY: setup test run seed clean prefect-run prefect-serve export-powerbi lint format typecheck api
+.PHONY: setup test run seed clean prefect-run prefect-serve export-powerbi lint format typecheck api dashboard-install dashboard-dev
 
 setup:
 	pip install -r requirements.txt
@@ -32,6 +32,12 @@ typecheck:
 
 api:
 	uvicorn api.main:app --reload --port 8000
+
+dashboard-install:
+	cd dashboard && npm install
+
+dashboard-dev:
+	cd dashboard && npm run dev
 
 clean:
 	rm -rf data/*.db data/pipeline_state.json __pycache__

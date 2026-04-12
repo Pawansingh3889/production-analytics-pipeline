@@ -266,6 +266,28 @@ When enabled, Sentry captures:
 
 The monitoring module (`extract/monitoring.py`) gracefully degrades -- if `sentry-sdk` is not installed or `SENTRY_DSN` is unset, all monitoring calls are silent no-ops.
 
+## Web Dashboard
+
+Real-time production dashboard built with Next.js 15, Tailwind CSS, and Recharts. Connects to the FastAPI backend (`make api`) and displays yield charts, active runs, temperature breaches, and compliance status.
+
+### Run
+
+```bash
+make dashboard-install   # install Node dependencies
+make dashboard-dev       # start dev server
+```
+
+Opens at [http://localhost:3000](http://localhost:3000). Requires the FastAPI backend running on port 8000.
+
+### Features
+
+- Four KPI cards: Total Yield, Active Runs, Temp Breaches, Compliance Issues
+- Daily yield bar chart (Recharts)
+- Active runs table with live data
+- Auto-refresh every 60 seconds
+- Graceful "API unavailable" state when backend is offline
+- Dark theme (bg-gray-950)
+
 ## Stack
 
 | Component | Technology |
@@ -278,4 +300,5 @@ The monitoring module (`extract/monitoring.py`) gracefully degrades -- if `sentr
 | API | FastAPI + Uvicorn |
 | Testing | pytest |
 | Error monitoring | Sentry (opt-in via `SENTRY_DSN`) |
+| Dashboard | Next.js 15 + Tailwind CSS + Recharts |
 | Language | Python 3.11+ |
