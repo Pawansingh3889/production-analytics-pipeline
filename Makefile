@@ -1,4 +1,4 @@
-.PHONY: setup test run seed clean
+.PHONY: setup test run seed clean prefect-run prefect-serve
 
 setup:
 	pip install -r requirements.txt
@@ -11,6 +11,12 @@ run:
 
 seed:
 	python scripts/seed_mock_erp.py
+
+prefect-run:
+	python -m workflow.prefect_flow
+
+prefect-serve:
+	prefect server start
 
 clean:
 	rm -rf data/*.db data/pipeline_state.json __pycache__

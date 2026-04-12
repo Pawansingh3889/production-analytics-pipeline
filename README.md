@@ -170,6 +170,24 @@ Configuration is via environment variables (`SOURCE_DB`, `TARGET_DB`, `STATE_FIL
 pytest -v
 ```
 
+## Orchestration
+
+The daily workflow can run standalone (`python -m workflow.daily_run`) or orchestrated via Prefect (`python -m workflow.prefect_flow`). Prefect adds automatic retry logic (2 retries with 30-second delay on each extraction task), a scheduling system for recurring runs, a monitoring dashboard with run history, and structured logging.
+
+To use Prefect orchestration:
+
+```bash
+pip install prefect>=3.0
+
+# Run the flow directly
+python -m workflow.prefect_flow          # incremental
+python -m workflow.prefect_flow --full   # full reload
+
+# Or use Make targets
+make prefect-run                         # run flow
+make prefect-serve                       # start Prefect UI at http://localhost:4200
+```
+
 ## Stack
 
 | Component | Technology |
@@ -178,5 +196,6 @@ pytest -v
 | ORM / connectivity | SQLAlchemy |
 | Schema validation | Pydantic |
 | Transformation | dbt |
+| Orchestration | Prefect 3 |
 | Testing | pytest |
 | Language | Python 3.11+ |

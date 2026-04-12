@@ -34,6 +34,7 @@ ERP (SQL Server) -> Extract (watermark-based) -> Validate (Pydantic) -> Clean ->
 | `extract/sources/transactions.py` | SI_OCM_TRANS source table definition |
 | `extract/sources/plu.py` | SI_OCM_PLU source table definition |
 | `extract/sources/totals.py` | SI_OCM_TOTALS source table definition |
+| `workflow/prefect_flow.py` | Prefect-orchestrated flow with retry logic |
 
 ## Source Tables
 
@@ -104,6 +105,10 @@ When modifying `extract/extractor.py`, always run `tests/test_safety.py` to conf
 - **Batch size**: 5,000 rows default, configurable.
 - **Rejected rows**: Written to `data/rejected_rows.csv` for manual investigation.
 
+## Orchestration
+
+`workflow/prefect_flow.py` wraps the daily pipeline with Prefect tasks and flows. Each extraction step (run numbers, transactions, PLU, totals) is a `@task` with `retries=2, retry_delay_seconds=30`. The main `daily_production_flow` is a `@flow` that runs all four extraction tasks, validates results, and prints a summary. Supports `--full` flag for full reload. Prefect provides a monitoring dashboard (`prefect server start`) with run history and failure alerts.
+
 ## Running the Pipeline
 
 ```bash
@@ -118,6 +123,10 @@ python -m extract.incremental --to-parquet
 
 # Daily orchestration
 python workflow/daily_run.py
+
+# Prefect-orchestrated flow
+python -m workflow.prefect_flow
+python -m workflow.prefect_flow --full
 
 # Run tests
 python -m pytest tests/ -v
