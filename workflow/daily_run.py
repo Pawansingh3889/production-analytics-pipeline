@@ -22,6 +22,7 @@ from extract.extractor import extract_table, get_watermark, set_watermark
 from extract.cleaner import clean_run_numbers, clean_transactions, clean_products
 from extract.loader import load_to_parquet, load_to_db, load_rejected
 from extract.sources import run_number, transactions, plu, totals
+from extract.monitoring import init_sentry, capture_exception
 
 logging.basicConfig(
     level=logging.INFO,
@@ -91,6 +92,7 @@ def extract_and_load(source, cleaner=None, full=False, to_parquet=False):
 
 def run(full: bool = False, to_parquet: bool = False, report_only: bool = False):
     """Run the full daily workflow."""
+    init_sentry()
     start = datetime.now()
     log.info("=" * 60)
     log.info("DAILY PRODUCTION DATA WORKFLOW")
@@ -100,29 +102,33 @@ def run(full: bool = False, to_parquet: bool = False, report_only: bool = False)
 
     results = []
 
-    if not report_only:
-        # Step 1: Extract RunNumber (production runs)
-        log.info("\n--- Step 1: Production Runs ---")
-        r = extract_and_load(run_number, cleaner=clean_run_numbers,
-                             full=full, to_parquet=to_parquet)
-        results.append(r)
+    try:
+        if not report_only:
+            # Step 1: Extract RunNumber (production runs)
+            log.info("\n--- Step 1: Production Runs ---")
+            r = extract_and_load(run_number, cleaner=clean_run_numbers,
+                                 full=full, to_parquet=to_parquet)
+            results.append(r)
 
-        # Step 2: Extract Transactions (per-pack weights)
-        log.info("\n--- Step 2: Transactions ---")
-        r = extract_and_load(transactions, cleaner=lambda df: (clean_transactions(df), None),
-                             full=full, to_parquet=to_parquet)
-        results.append(r)
+            # Step 2: Extract Transactions (per-pack weights)
+            log.info("\n--- Step 2: Transactions ---")
+            r = extract_and_load(transactions, cleaner=lambda df: (clean_transactions(df), None),
+                                 full=full, to_parquet=to_parquet)
+            results.append(r)
 
-        # Step 3: Extract PLU (product master)
-        log.info("\n--- Step 3: Products (PLU) ---")
-        r = extract_and_load(plu, cleaner=lambda df: (clean_products(df), None),
-                             full=full, to_parquet=to_parquet)
-        results.append(r)
+            # Step 3: Extract PLU (product master)
+            log.info("\n--- Step 3: Products (PLU) ---")
+            r = extract_and_load(plu, cleaner=lambda df: (clean_products(df), None),
+                                 full=full, to_parquet=to_parquet)
+            results.append(r)
 
-        # Step 4: Extract Run Totals
-        log.info("\n--- Step 4: Run Totals ---")
-        r = extract_and_load(totals, full=full, to_parquet=to_parquet)
-        results.append(r)
+            # Step 4: Extract Run Totals
+            log.info("\n--- Step 4: Run Totals ---")
+            r = extract_and_load(totals, full=full, to_parquet=to_parquet)
+            results.append(r)
+    except Exception as exc:
+        capture_exception(exc)
+        raise
 
     # Step 5: Summary
     elapsed = (datetime.now() - start).total_seconds()

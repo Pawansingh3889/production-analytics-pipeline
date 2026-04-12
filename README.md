@@ -247,6 +247,25 @@ Swagger docs at [http://localhost:8000/docs](http://localhost:8000/docs).
 | GET | `/shelf-life/expiring` | Products approaching day-12 freeze-down |
 | POST | `/pipeline/run` | Trigger pipeline extraction (`?full=true` for full reload) |
 
+## Error Monitoring
+
+Optional Sentry integration for error tracking. Disabled by default (no-op if `SENTRY_DSN` is not set).
+
+To enable, set the `SENTRY_DSN` environment variable:
+
+```bash
+export SENTRY_DSN="https://examplePublicKey@o0.ingest.sentry.io/0"
+export ENVIRONMENT="production"   # optional, defaults to "development"
+```
+
+When enabled, Sentry captures:
+
+- Pipeline failures during daily extraction runs
+- API errors in the FastAPI service
+- Extraction and validation issues across all source tables
+
+The monitoring module (`extract/monitoring.py`) gracefully degrades -- if `sentry-sdk` is not installed or `SENTRY_DSN` is unset, all monitoring calls are silent no-ops.
+
 ## Stack
 
 | Component | Technology |
@@ -258,4 +277,5 @@ Swagger docs at [http://localhost:8000/docs](http://localhost:8000/docs).
 | Orchestration | Prefect 3 |
 | API | FastAPI + Uvicorn |
 | Testing | pytest |
+| Error monitoring | Sentry (opt-in via `SENTRY_DSN`) |
 | Language | Python 3.11+ |

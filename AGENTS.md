@@ -36,6 +36,7 @@ ERP (SQL Server) -> Extract (watermark-based) -> Validate (Pydantic) -> Clean ->
 | `extract/sources/totals.py` | SI_OCM_TOTALS source table definition |
 | `workflow/prefect_flow.py` | Prefect-orchestrated flow with retry logic |
 | `api/main.py` | FastAPI REST API -- 11 endpoints for production data |
+| `extract/monitoring.py` | Sentry error monitoring (opt-in via `SENTRY_DSN` env var) |
 
 ## Source Tables
 
@@ -121,6 +122,10 @@ When modifying `extract/extractor.py`, always run `tests/test_safety.py` to conf
 Endpoints: `/health`, `/yield/daily`, `/yield/by-line`, `/trace/{batch_code}`, `/runs/active`, `/runs/{run_number}`, `/compliance/checks`, `/temperature/breaches`, `/products`, `/shelf-life/expiring`, `POST /pipeline/run`.
 
 The `POST /pipeline/run` endpoint triggers the daily workflow in a background thread. All GET endpoints return JSON with graceful empty-result handling.
+
+## Error Monitoring
+
+`extract/monitoring.py` provides optional Sentry integration. Set `SENTRY_DSN` environment variable to enable; if unset, all monitoring calls are silent no-ops. The module is imported in `workflow/daily_run.py`, `workflow/prefect_flow.py`, and `api/main.py`. It captures pipeline failures, API errors, and extraction issues. Traces sample rate is 0.1. The `ENVIRONMENT` env var controls the Sentry environment tag (defaults to `development`).
 
 ## Running the Pipeline
 

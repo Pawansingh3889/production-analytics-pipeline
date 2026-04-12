@@ -18,6 +18,8 @@ from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException, Query
 from sqlalchemy import create_engine, text
 
+from extract.monitoring import init_sentry
+
 # ---------------------------------------------------------------------------
 # Database setup
 # ---------------------------------------------------------------------------
@@ -44,6 +46,8 @@ app = FastAPI(
     ),
     version="1.0.0",
 )
+
+init_sentry()
 
 
 # ---------------------------------------------------------------------------

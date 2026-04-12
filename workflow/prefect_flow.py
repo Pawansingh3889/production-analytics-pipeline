@@ -22,6 +22,7 @@ from extract.extractor import extract_table, get_watermark, set_watermark
 from extract.cleaner import clean_run_numbers, clean_transactions, clean_products
 from extract.loader import load_to_parquet, load_to_db, load_rejected
 from extract.sources import run_number, transactions, plu, totals
+from extract.monitoring import init_sentry, capture_exception
 
 
 # ---------------------------------------------------------------------------
@@ -87,6 +88,7 @@ def daily_production_flow(full: bool = False):
     Args:
         full: If True, perform a full reload instead of incremental.
     """
+    init_sentry()
     logger = get_run_logger()
     start = datetime.now()
 
@@ -96,16 +98,20 @@ def daily_production_flow(full: bool = False):
     logger.info("Mode: %s", mode)
     logger.info("=" * 60)
 
-    # Step 1-4: Extract each source table (retries handled by Prefect)
-    r1 = extract_run_numbers(full=full)
-    r2 = extract_transactions_task(full=full)
-    r3 = extract_plu(full=full)
-    r4 = extract_totals(full=full)
+    try:
+        # Step 1-4: Extract each source table (retries handled by Prefect)
+        r1 = extract_run_numbers(full=full)
+        r2 = extract_transactions_task(full=full)
+        r3 = extract_plu(full=full)
+        r4 = extract_totals(full=full)
 
-    results = [r1, r2, r3, r4]
+        results = [r1, r2, r3, r4]
 
-    # Step 5: Validate
-    validated = validate_results(results)
+        # Step 5: Validate
+        validated = validate_results(results)
+    except Exception as exc:
+        capture_exception(exc)
+        raise
 
     # Step 6: Summary
     elapsed = (datetime.now() - start).total_seconds()
