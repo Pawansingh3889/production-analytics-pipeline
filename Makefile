@@ -1,4 +1,4 @@
-.PHONY: setup test run seed clean prefect-run prefect-serve export-powerbi
+.PHONY: setup test run seed clean prefect-run prefect-serve export-powerbi lint format typecheck
 
 setup:
 	pip install -r requirements.txt
@@ -20,6 +20,15 @@ prefect-serve:
 
 export-powerbi:
 	python -m reports.powerbi_export
+
+lint:
+	ruff check .
+
+format:
+	ruff format .
+
+typecheck:
+	mypy extract/ models/ workflow/
 
 clean:
 	rm -rf data/*.db data/pipeline_state.json __pycache__
