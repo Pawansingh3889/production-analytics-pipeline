@@ -188,6 +188,35 @@ make prefect-run                         # run flow
 make prefect-serve                       # start Prefect UI at http://localhost:4200
 ```
 
+## Power BI Integration
+
+Export production mart data to CSV files that can be imported into Power BI Desktop for dashboarding and ad-hoc analysis.
+
+### Export CSVs
+
+```bash
+make export-powerbi
+# or
+python -m reports.powerbi_export
+```
+
+CSV files are written to `reports/powerbi/`:
+
+| File | Contents |
+|---|---|
+| `daily_yield.csv` | Production runs aggregated by date, shift, line, species |
+| `shift_productivity.csv` | Shift-level output, giveaway, and downtime KPIs |
+| `compliance_checks.csv` | Per-run compliance status and giveaway warnings |
+
+If dbt mart tables have been materialised (`fct_daily_yield`, `fct_shift_productivity`, `fct_compliance_checks`), the export uses those directly. Otherwise it falls back to equivalent queries against the raw tables.
+
+### Connect Power BI Desktop
+
+1. Open Power BI Desktop.
+2. Click **Get Data** -> **Text/CSV**.
+3. Select one or more CSV files from `reports/powerbi/`.
+4. Load the data and build your reports.
+
 ## Stack
 
 | Component | Technology |

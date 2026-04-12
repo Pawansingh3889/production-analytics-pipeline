@@ -1,4 +1,4 @@
-.PHONY: setup test run seed clean prefect-run prefect-serve
+.PHONY: setup test run seed clean prefect-run prefect-serve export-powerbi
 
 setup:
 	pip install -r requirements.txt
@@ -17,6 +17,9 @@ prefect-run:
 
 prefect-serve:
 	prefect server start
+
+export-powerbi:
+	python -m reports.powerbi_export
 
 clean:
 	rm -rf data/*.db data/pipeline_state.json __pycache__

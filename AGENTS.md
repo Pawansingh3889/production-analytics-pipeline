@@ -109,6 +109,10 @@ When modifying `extract/extractor.py`, always run `tests/test_safety.py` to conf
 
 `workflow/prefect_flow.py` wraps the daily pipeline with Prefect tasks and flows. Each extraction step (run numbers, transactions, PLU, totals) is a `@task` with `retries=2, retry_delay_seconds=30`. The main `daily_production_flow` is a `@flow` that runs all four extraction tasks, validates results, and prints a summary. Supports `--full` flag for full reload. Prefect provides a monitoring dashboard (`prefect server start`) with run history and failure alerts.
 
+## Power BI Export
+
+`reports/powerbi_export.py` exports mart-level data (daily yield, shift productivity, compliance checks) to CSV files in `reports/powerbi/`. If dbt mart tables exist they are used directly; otherwise fallback queries run against raw tables. Run with `make export-powerbi` or `python -m reports.powerbi_export`.
+
 ## Running the Pipeline
 
 ```bash
