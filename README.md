@@ -9,13 +9,29 @@ Incremental ETL pipeline for fish production data. Extracts from legacy ERP tabl
 ## Architecture
 
 ```
-ERP (SQL Server)        Python              dbt                 Analyst
- RunNumber table  -->  extract/   -->  staging views  -->  production queries
-                       incremental.py   mart tables         + dashboards
+SI Integreater (ERP)
+    |
+    v
+[Extract] --- extract/incremental.py, Pydantic validation
+    |
+    v
+[Transform] --- dbt staging views + mart tables
+    |
+    +---> [FastAPI] --- 11 REST endpoints (localhost:8000/docs)
+    |
+    +---> [Next.js] --- production dashboard (localhost:3000)
+    |
+    +---> [Power BI] --- CSV export for desktop dashboards
+    |
+    +---> [Prefect] --- orchestration with retry + monitoring
+    |
+    +---> [n8n] --- visual workflow automation
+    |
+    +---> [Sentry] --- error monitoring (opt-in)
 
-docker-compose.yml          # SQL Server sandbox container
-scripts/init_sandbox.sql    # Read-only user setup
-scripts/setup_sandbox.py    # Sandbox bootstrap script
+Infrastructure: Docker + OpenTofu
+Quality: ruff + mypy + pytest (53 tests)
+Safety: 6-layer read-only architecture
 ```
 
 ### Extract
