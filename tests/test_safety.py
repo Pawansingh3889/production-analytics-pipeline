@@ -1,5 +1,6 @@
 """Tests for extraction safety guards."""
 import pytest
+
 from extract.extractor import _validate_extraction
 
 

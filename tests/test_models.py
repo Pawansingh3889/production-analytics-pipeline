@@ -1,7 +1,9 @@
 """Tests for Pydantic schema enforcement models."""
-import pytest
 from datetime import datetime
-from models.run_number import RunNumberRecord, _extract_species, _extract_product_type
+
+import pytest
+
+from models.run_number import RunNumberRecord, _extract_product_type, _extract_species
 
 
 class TestRunNumberRecord:

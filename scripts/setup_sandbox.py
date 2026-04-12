@@ -81,8 +81,9 @@ def create_readonly_user(engine):
             print("Created login: pipeline_reader")
 
     # Switch to production_dw
+    from sqlalchemy import create_engine as _create_engine
     dw_url = TARGET
-    dw_engine = create_engine(dw_url)
+    dw_engine = _create_engine(dw_url)
     with dw_engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
         result = conn.execute(text(
             "SELECT name FROM sys.database_principals WHERE name = 'pipeline_reader'"
@@ -106,16 +107,14 @@ def load_mock_data():
 
     # Reuse the existing seed script but target the sandbox
     os.environ["SOURCE_DB"] = TARGET
-    from scripts.seed_mock_erp import seed
     # The seed script creates a SQLite DB, but we'll adapt
     # For now, just confirm the sandbox is ready
     print("Mock data: use scripts/seed_mock_erp.py for SQLite, or load SQL files manually")
-    print(f"  sqlcmd -S localhost -U sa -P 'SandboxP@ss123' -d production_dw -i sql/001_create_schema.sql")
-    print(f"  sqlcmd -S localhost -U sa -P 'SandboxP@ss123' -d production_dw -i sql/002_seed_data.sql")
+    print("  sqlcmd -S localhost -U sa -P 'SandboxP@ss123' -d production_dw -i sql/001_create_schema.sql")
+    print("  sqlcmd -S localhost -U sa -P 'SandboxP@ss123' -d production_dw -i sql/002_seed_data.sql")
 
 
 def main():
-    from sqlalchemy import create_engine
 
     print("=" * 60)
     print("SANDBOX SETUP")

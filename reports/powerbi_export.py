@@ -6,12 +6,10 @@ own CSV that can be loaded via Power BI Desktop -> Get Data -> Text/CSV.
 """
 
 import os
-import sys
 from pathlib import Path
 
 import pandas as pd
 from sqlalchemy import create_engine, inspect, text
-
 
 # ---------------------------------------------------------------------------
 # Configuration

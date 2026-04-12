@@ -13,8 +13,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
 from typing import Optional
 
 import pandas as pd
@@ -22,7 +21,6 @@ from sqlalchemy import create_engine, text
 
 from extract.config import (
     BATCH_SIZE,
-    MAX_UDF_LENGTH,
     RUN_NUMBER_COLUMNS,
     SOURCE_DB,
     STATE_FILE,

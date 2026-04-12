@@ -1,10 +1,10 @@
 """Tests for incremental extraction pipeline."""
-import json
 import os
-import pytest
 from datetime import datetime
-from extract.incremental import build_query, load_state, save_state, validate
+
 import pandas as pd
+
+from extract.incremental import build_query, validate
 
 
 class TestBuildQuery:

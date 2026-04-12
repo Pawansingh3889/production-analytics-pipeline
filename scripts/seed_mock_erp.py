@@ -3,9 +3,9 @@
 Creates a SQLite database that mimics the RunNumber table structure
 from a fish processing ERP system.
 """
-import sqlite3
-import random
 import os
+import random
+import sqlite3
 from datetime import datetime, timedelta
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "mock_erp.db")

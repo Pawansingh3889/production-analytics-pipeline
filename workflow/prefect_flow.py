@@ -16,14 +16,13 @@ from __future__ import annotations
 import sys
 from datetime import datetime
 
-from prefect import flow, task, get_run_logger
+from prefect import flow, get_run_logger, task
 
+from extract.cleaner import clean_products, clean_run_numbers, clean_transactions
 from extract.extractor import extract_table, get_watermark, set_watermark
-from extract.cleaner import clean_run_numbers, clean_transactions, clean_products
-from extract.loader import load_to_parquet, load_to_db, load_rejected
-from extract.sources import run_number, transactions, plu, totals
-from extract.monitoring import init_sentry, capture_exception
-
+from extract.loader import load_rejected, load_to_db
+from extract.monitoring import capture_exception, init_sentry
+from extract.sources import plu, run_number, totals, transactions
 
 # ---------------------------------------------------------------------------
 # Tasks -- each extraction step is a discrete, retryable unit of work
