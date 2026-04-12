@@ -217,6 +217,36 @@ If dbt mart tables have been materialised (`fct_daily_yield`, `fct_shift_product
 3. Select one or more CSV files from `reports/powerbi/`.
 4. Load the data and build your reports.
 
+## REST API
+
+FastAPI service exposing production data over HTTP. Shift managers, planners, and compliance teams can query data without running Python scripts.
+
+### Run
+
+```bash
+make api
+# or
+uvicorn api.main:app --reload
+```
+
+Swagger docs at [http://localhost:8000/docs](http://localhost:8000/docs).
+
+### Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/health` | Service health and table count |
+| GET | `/yield/daily` | Daily yield summary (default last 7 days, `?days=N`) |
+| GET | `/yield/by-line` | Yield grouped by production line |
+| GET | `/trace/{batch_code}` | Trace a batch code through its lineage |
+| GET | `/runs/active` | Currently active (incomplete) runs |
+| GET | `/runs/{run_number}` | Details for a specific run |
+| GET | `/compliance/checks` | Compliance violations (giveaway, missing codes) |
+| GET | `/temperature/breaches` | Temperature breaches (default last 24h, `?hours=N`) |
+| GET | `/products` | Product catalogue |
+| GET | `/shelf-life/expiring` | Products approaching day-12 freeze-down |
+| POST | `/pipeline/run` | Trigger pipeline extraction (`?full=true` for full reload) |
+
 ## Stack
 
 | Component | Technology |
@@ -226,5 +256,6 @@ If dbt mart tables have been materialised (`fct_daily_yield`, `fct_shift_product
 | Schema validation | Pydantic |
 | Transformation | dbt |
 | Orchestration | Prefect 3 |
+| API | FastAPI + Uvicorn |
 | Testing | pytest |
 | Language | Python 3.11+ |

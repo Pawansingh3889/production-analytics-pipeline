@@ -35,6 +35,7 @@ ERP (SQL Server) -> Extract (watermark-based) -> Validate (Pydantic) -> Clean ->
 | `extract/sources/plu.py` | SI_OCM_PLU source table definition |
 | `extract/sources/totals.py` | SI_OCM_TOTALS source table definition |
 | `workflow/prefect_flow.py` | Prefect-orchestrated flow with retry logic |
+| `api/main.py` | FastAPI REST API -- 11 endpoints for production data |
 
 ## Source Tables
 
@@ -112,6 +113,14 @@ When modifying `extract/extractor.py`, always run `tests/test_safety.py` to conf
 ## Power BI Export
 
 `reports/powerbi_export.py` exports mart-level data (daily yield, shift productivity, compliance checks) to CSV files in `reports/powerbi/`. If dbt mart tables exist they are used directly; otherwise fallback queries run against raw tables. Run with `make export-powerbi` or `python -m reports.powerbi_export`.
+
+## REST API
+
+`api/main.py` is a FastAPI application serving 11 endpoints over HTTP. It queries `data/production_dw.db` via SQLAlchemy (read-only). Start with `make api` or `uvicorn api.main:app --reload`. Swagger docs at `http://localhost:8000/docs`.
+
+Endpoints: `/health`, `/yield/daily`, `/yield/by-line`, `/trace/{batch_code}`, `/runs/active`, `/runs/{run_number}`, `/compliance/checks`, `/temperature/breaches`, `/products`, `/shelf-life/expiring`, `POST /pipeline/run`.
+
+The `POST /pipeline/run` endpoint triggers the daily workflow in a background thread. All GET endpoints return JSON with graceful empty-result handling.
 
 ## Running the Pipeline
 

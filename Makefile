@@ -1,4 +1,4 @@
-.PHONY: setup test run seed clean prefect-run prefect-serve export-powerbi lint format typecheck
+.PHONY: setup test run seed clean prefect-run prefect-serve export-powerbi lint format typecheck api
 
 setup:
 	pip install -r requirements.txt
@@ -29,6 +29,9 @@ format:
 
 typecheck:
 	mypy extract/ models/ workflow/
+
+api:
+	uvicorn api.main:app --reload --port 8000
 
 clean:
 	rm -rf data/*.db data/pipeline_state.json __pycache__
