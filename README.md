@@ -4,6 +4,13 @@
 
 # Production Analytics Pipeline
 
+## Links
+- [GitHub](https://github.com/Pawansingh3889/production-analytics-pipeline)
+- [API Docs](http://localhost:8000/docs) (when running)
+- [Dashboard](http://localhost:3000) (when running)
+- [n8n Workflows](http://localhost:5678) (when running)
+- [Profile](https://github.com/Pawansingh3889)
+
 Incremental ETL pipeline for fish production data. Extracts from legacy ERP tables, validates with Pydantic, transforms with dbt. Handles batch-centric production runs (one batch, multiple products), waterfall yield tracking across RSPCA/GG/Almaria tiers, batch lineage for OCM scan-back traceability, shelf life management (0/+1/+2/+3 adjustments), and paperwork digitisation.
 
 ## Architecture
