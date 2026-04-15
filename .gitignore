@@ -14,9 +14,3 @@ data/
 # Dashboard
 dashboard/node_modules/
 dashboard/.next/
-
-# AI tools
-.claude/
-.cursorrules
-.continue/
-.aider*
