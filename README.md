@@ -11,6 +11,23 @@
 - [n8n Workflows](http://localhost:5678) (when running)
 - [Profile](https://github.com/Pawansingh3889)
 
+## What Problem Does This Solve?
+
+Shift managers in fish processing factories rely on delayed Excel reports and manual data entry to track production. By the time they see the numbers, the shift is over. This pipeline pulls data automatically from the factory ERP, transforms it, and serves live dashboards — so decisions happen during the shift, not after.
+
+### Key Results
+
+| Metric | Value |
+|---|---|
+| Daily rows processed | 15,000+ |
+| API endpoints | 11 (FastAPI) |
+| Automated tests | 53 |
+| Data sources | 4 SI Integreater tables |
+| Dashboards | Next.js (live) + Power BI (export) |
+| Orchestration | Prefect with retry logic |
+
+---
+
 Incremental ETL pipeline for fish production data. Extracts from legacy ERP tables, validates with Pydantic, transforms with dbt. Handles batch-centric production runs (one batch, multiple products), waterfall yield tracking across RSPCA/GG/Almaria tiers, batch lineage for OCM scan-back traceability, shelf life management (0/+1/+2/+3 adjustments), and paperwork digitisation.
 
 ## Architecture
