@@ -1,4 +1,4 @@
-"""Extract SI_OCM_TRANS — per-pack weights from inline scales."""
+"""Extract erp_transactions — per-pack weights from inline scales."""
 
 COLUMNS = [
     "TransNo",
@@ -17,6 +17,6 @@ COLUMNS = [
     "OperatorID",
 ]
 
-TABLE = "SI_OCM_TRANS"
+TABLE = "erp_transactions"
 WATERMARK_COLUMN = "TransDate"
 TARGET_TABLE = "raw_transactions"

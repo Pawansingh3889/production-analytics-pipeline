@@ -111,7 +111,7 @@ ORDER BY nc.nc_date;
 
 
 -- Q7: Customer order fulfilment — which orders are at risk?
--- "Are we going to hit Lidl's order for cod fillets?"
+-- "Are we going to hit Customer A's order for cod fillets?"
 SELECT
     d.customer,
     p.description,

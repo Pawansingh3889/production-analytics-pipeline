@@ -10,7 +10,7 @@ SELECT
     -- Input totals
     SUM(DISTINCT r.target_qty_kg) AS input_kg,
 
-    -- Tier 1 (RSPCA premium)
+    -- Tier 1 (Premium premium)
     SUM(CASE WHEN o.tier = 1 THEN o.qty_kg ELSE 0 END) AS tier1_kg,
     ROUND(
         SUM(CASE WHEN o.tier = 1 THEN o.qty_kg ELSE 0 END) /

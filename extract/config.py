@@ -7,7 +7,7 @@ import os
 import sys
 
 # Source: SQL Server (ERP system, read-only)
-# Example: mssql+pyodbc://readonly:pass@SERVER/SI_OCM_23?driver=ODBC+Driver+17+for+SQL+Server
+# Example: mssql+pyodbc://readonly:pass@SERVER/DEMO_ERP_DB?driver=ODBC+Driver+17+for+SQL+Server
 SOURCE_DB = os.getenv("SOURCE_DB", "sqlite:///data/mock_erp.db")
 
 # Target: where cleaned data lands

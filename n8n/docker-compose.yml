@@ -8,7 +8,7 @@ services:
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=production2026
+      - N8N_BASIC_AUTH_PASSWORD=demo2026
       - GENERIC_TIMEZONE=Europe/London
     volumes:
       - n8n_data:/home/node/.n8n

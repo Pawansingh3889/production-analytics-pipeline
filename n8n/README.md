@@ -9,7 +9,7 @@ cd n8n
 docker-compose up -d
 ```
 
-Open http://localhost:5678 (admin / production2026)
+Open http://localhost:5678 (admin / demo2026)
 
 ## Suggested Workflows
 

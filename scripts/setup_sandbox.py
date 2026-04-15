@@ -18,7 +18,7 @@ import time
 # Check if running against sandbox (safety check)
 TARGET = os.getenv(
     "SANDBOX_DB",
-    "mssql+pyodbc://sa:SandboxP@ss123@localhost/production_dw?driver=ODBC+Driver+17+for+SQL+Server"
+    "mssql+pyodbc://sa:DemoPass123!@localhost/production_dw?driver=ODBC+Driver+17+for+SQL+Server"
 )
 
 if "localhost" not in TARGET and "127.0.0.1" not in TARGET:
@@ -110,8 +110,8 @@ def load_mock_data():
     # The seed script creates a SQLite DB, but we'll adapt
     # For now, just confirm the sandbox is ready
     print("Mock data: use scripts/seed_mock_erp.py for SQLite, or load SQL files manually")
-    print("  sqlcmd -S localhost -U sa -P 'SandboxP@ss123' -d production_dw -i sql/001_create_schema.sql")
-    print("  sqlcmd -S localhost -U sa -P 'SandboxP@ss123' -d production_dw -i sql/002_seed_data.sql")
+    print("  sqlcmd -S localhost -U sa -P 'DemoPass123!' -d production_dw -i sql/001_create_schema.sql")
+    print("  sqlcmd -S localhost -U sa -P 'DemoPass123!' -d production_dw -i sql/002_seed_data.sql")
 
 
 def main():

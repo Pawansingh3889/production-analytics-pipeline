@@ -39,7 +39,7 @@ def seed():
     products = [
         ("DEF- MSC HAKE FILLETS", "HAKE-FIL-01", "Line 1"),
         ("SEABASS FILLETS SKIN ON", "SBAS-FIL-02", "Line 2"),
-        ("RSPCA SALMON PORTIONS 130G", "SAL-POR-03", "Line 1"),
+        ("SALMON PORTIONS 130G", "SAL-POR-03", "Line 1"),
         ("COD FILLET SKINLESS 200G", "COD-FIL-04", "Line 3"),
         ("SMOKED HADDOCK FILLET 170G", "HAD-SMK-05", "Smoke Line"),
         ("MSC COD LOIN BONELESS 280G", "COD-LON-06", "Line 2"),
@@ -96,10 +96,10 @@ def seed():
         rows
     )
 
-    # === SI_OCM_TRANS (per-pack weights) ===
+    # === erp_transactions (per-pack weights) ===
     c.executescript("""
-        DROP TABLE IF EXISTS SI_OCM_TRANS;
-        CREATE TABLE SI_OCM_TRANS (
+        DROP TABLE IF EXISTS erp_transactions;
+        CREATE TABLE erp_transactions (
             TransNo INTEGER PRIMARY KEY AUTOINCREMENT,
             RunNumber TEXT, TransDate TEXT, ProductCode TEXT,
             Weight REAL, TargetWeight REAL, Tare REAL,
@@ -128,17 +128,17 @@ def seed():
             net = round(wt - tare, 1)
             over = round(net - target_wt, 1)
             c.execute(
-                "INSERT INTO SI_OCM_TRANS (RunNumber, TransDate, ProductCode, Weight, TargetWeight, Tare, NetWeight, Overweight, Barcode, LabelPrinted, ScannerPass, ProdLine, OperatorID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO erp_transactions (RunNumber, TransDate, ProductCode, Weight, TargetWeight, Tare, NetWeight, Overweight, Barcode, LabelPrinted, ScannerPass, ProdLine, OperatorID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (run_num, date_str, pcode, wt, target_wt, tare, net, over,
                  f"501234{random.randint(1000000,9999999)}", 1,
                  1 if random.random() > 0.02 else 0, pline, f"OP{random.randint(1,8):02d}")
             )
             trans_count += 1
 
-    # === SI_OCM_PLU (product master) ===
+    # === erp_products (product master) ===
     c.executescript("""
-        DROP TABLE IF EXISTS SI_OCM_PLU;
-        CREATE TABLE SI_OCM_PLU (
+        DROP TABLE IF EXISTS erp_products;
+        CREATE TABLE erp_products (
             PLUNumber INTEGER PRIMARY KEY AUTOINCREMENT,
             Description TEXT, ProductCode TEXT, Category TEXT,
             Species TEXT, PackSize REAL, ShelfLife INTEGER,
@@ -159,15 +159,15 @@ def seed():
                 species = v
                 break
         c.execute(
-            "INSERT INTO SI_OCM_PLU (Description, ProductCode, Category, Species, PackSize, ShelfLife, Allergens, Updated) VALUES (?,?,?,?,?,?,?,?)",
+            "INSERT INTO erp_products (Description, ProductCode, Category, Species, PackSize, ShelfLife, Allergens, Updated) VALUES (?,?,?,?,?,?,?,?)",
             (desc, pcode, 'fish', species, random.choice([130, 150, 170, 200, 280, 300, 400]),
              random.randint(4, 14), 'fish', now.strftime("%Y-%m-%d %H:%M:%S"))
         )
 
-    # === SI_OCM_TOTALS (run aggregates) ===
+    # === erp_totals (run aggregates) ===
     c.executescript("""
-        DROP TABLE IF EXISTS SI_OCM_TOTALS;
-        CREATE TABLE SI_OCM_TOTALS (
+        DROP TABLE IF EXISTS erp_totals;
+        CREATE TABLE erp_totals (
             RunNumber TEXT PRIMARY KEY, TotalPacks INTEGER,
             TotalWeight REAL, AvgWeight REAL, MinWeight REAL,
             MaxWeight REAL, StdDev REAL, Giveaway REAL,
@@ -192,7 +192,7 @@ def seed():
         # Rejects: 0-5% of packs
         reject_count = random.randint(0, max(1, int(packs * 0.05)))
         c.execute(
-            "INSERT INTO SI_OCM_TOTALS VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO erp_totals VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
             (run_num, packs, total_kg,
              round(avg_wt, 1), round(avg_wt - std_dev * 2, 1), round(avg_wt + std_dev * 2, 1),
              std_dev, giveaway_kg, giveaway_pct,
@@ -205,9 +205,9 @@ def seed():
 
     print(f"Mock ERP database created: {DB_PATH}")
     print(f"  RunNumber rows: {len(rows)}")
-    print(f"  SI_OCM_TRANS rows: {trans_count}")
-    print(f"  SI_OCM_PLU rows: {len(products)}")
-    print(f"  SI_OCM_TOTALS rows: {len(rows)}")
+    print(f"  erp_transactions rows: {trans_count}")
+    print(f"  erp_products rows: {len(products)}")
+    print(f"  erp_totals rows: {len(rows)}")
     print(f"  Date range: {(now - timedelta(days=90)).strftime('%Y-%m-%d')} to {now.strftime('%Y-%m-%d')}")
 
 

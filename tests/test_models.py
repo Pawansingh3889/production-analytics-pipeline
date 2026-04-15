@@ -105,7 +105,7 @@ class TestRunNumberRecord:
 class TestSpeciesExtraction:
     @pytest.mark.parametrize("desc,expected", [
         ("MSC HAKE FILLETS", "hake"),
-        ("RSPCA SALMON PORTIONS", "salmon"),
+        ("Premium SALMON PORTIONS", "salmon"),
         ("COD FILLET SKINLESS", "cod"),
         ("SMOKED HADDOCK", "haddock"),
         ("MACKEREL PEPPERED", "mackerel"),

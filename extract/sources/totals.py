@@ -1,4 +1,4 @@
-"""Extract SI_OCM_TOTALS — run-level aggregates."""
+"""Extract erp_totals — run-level aggregates."""
 
 COLUMNS = [
     "RunNumber",
@@ -15,6 +15,6 @@ COLUMNS = [
     "Updated",
 ]
 
-TABLE = "SI_OCM_TOTALS"
+TABLE = "erp_totals"
 WATERMARK_COLUMN = "Updated"
 TARGET_TABLE = "raw_run_totals"

@@ -13,11 +13,11 @@ SELECT
     o.qty_kg,
     CASE
         WHEN o.source_grade = 'GG' AND o.tier = 1
-        THEN 'CRITICAL: GG material in RSPCA product'
+        THEN 'CRITICAL: GG material in Premium product'
         WHEN o.piece_type = 'tail' AND o.tier = 1
-        THEN 'CRITICAL: Tail pieces in RSPCA product'
-        WHEN o.source_grade = 'RSPCA' AND o.brand = 'GG' AND o.piece_type = 'center_cut'
-        THEN 'INFO: RSPCA downgraded to GG (value loss)'
+        THEN 'CRITICAL: Tail pieces in Premium product'
+        WHEN o.source_grade = 'Premium' AND o.brand = 'GG' AND o.piece_type = 'center_cut'
+        THEN 'INFO: Premium downgraded to GG (value loss)'
         ELSE 'OK'
     END AS compliance_status,
     CASE
@@ -28,4 +28,4 @@ SELECT
 FROM {{ ref('stg_run_outputs') }} o
 LEFT JOIN {{ ref('stg_runs') }} r ON o.run_number = r.run_number
 WHERE o.compliant = 0
-   OR (o.source_grade = 'RSPCA' AND o.brand = 'GG' AND o.piece_type = 'center_cut')
+   OR (o.source_grade = 'Premium' AND o.brand = 'GG' AND o.piece_type = 'center_cut')

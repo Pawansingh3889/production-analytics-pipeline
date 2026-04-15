@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS production.product_catalogue;
 CREATE TABLE production.product_catalogue (
     product_code    VARCHAR(20) PRIMARY KEY,
     description     VARCHAR(200) NOT NULL,
-    brand           VARCHAR(20) NOT NULL,       -- 'RSPCA', 'GG', 'ALMARIA'
+    brand           VARCHAR(20) NOT NULL,       -- 'Premium', 'GG', 'ALMARIA'
     species         VARCHAR(20) NOT NULL,       -- 'salmon', 'seabass'
     tier            INT NOT NULL,               -- 1=premium, 2=standard, 3=catch-all
     pack_weight_g   DECIMAL(8,1),               -- final pack weight
@@ -20,11 +20,11 @@ CREATE TABLE production.product_catalogue (
 );
 
 INSERT INTO production.product_catalogue VALUES
--- RSPCA (Tier 1 — premium, 120g center-cut only)
-('RSPCA-240',  'RSPCA Salmon 240g Twin Pack',     'RSPCA',   'salmon',  1, 240,  2, 120, 'center_cut', 'Retail', 1),
-('RSPCA-480',  'RSPCA Salmon 480g 4-Piece',       'RSPCA',   'salmon',  1, 480,  4, 120, 'center_cut', 'Retail', 1),
-('RSPCA-1KG',  'RSPCA Salmon 1kg',                'RSPCA',   'salmon',  1, 1000, 8, 120, 'center_cut', 'Retail', 1),
-('RSPCA-J500', 'RSPCA Salmon Joint 500g',         'RSPCA',   'salmon',  1, 500,  1, 500, 'joint',      'Retail', 1),
+-- Premium (Tier 1 — premium, 120g center-cut only)
+('Premium-240',  'Premium Salmon 240g Twin Pack',     'Premium',   'salmon',  1, 240,  2, 120, 'center_cut', 'Retail', 1),
+('Premium-480',  'Premium Salmon 480g 4-Piece',       'Premium',   'salmon',  1, 480,  4, 120, 'center_cut', 'Retail', 1),
+('Premium-1KG',  'Premium Salmon 1kg',                'Premium',   'salmon',  1, 1000, 8, 120, 'center_cut', 'Retail', 1),
+('Premium-J500', 'Premium Salmon Joint 500g',         'Premium',   'salmon',  1, 500,  1, 500, 'joint',      'Retail', 1),
 
 -- GG (Tier 2 — standard, 140g portions + tails + marinades)
 ('GG-280',     'GG Salmon 280g',                  'GG',      'salmon',  2, 280,  2, 140, 'center_cut', 'Retail', 1),
@@ -40,26 +40,26 @@ INSERT INTO production.product_catalogue VALUES
 ('GG-SS',      'Simply Salmon 2-10 Pieces',       'GG',      'salmon',  3, NULL, NULL, NULL, 'offcut',  'Retail', 1),
 
 -- ALMARIA (Tier 2 — GG tier, new customer)
-('ALM-240',    'Almaria GG Salmon 240g',          'ALMARIA', 'salmon',  2, 240,  2, 120, 'center_cut', 'Almaria', 1),
-('ALM-SC220',  'Almaria GG Chilli Marinade 220g', 'ALMARIA', 'salmon',  2, 220,  1, 220, 'marinade',   'Almaria', 1),
-('ALM-SB360',  'Almaria Seabass 360g',            'ALMARIA', 'seabass', 2, 360,  2, 180, 'center_cut', 'Almaria', 1),
-('ALM-BF255',  'Almaria Butterfly Seabass 255g',  'ALMARIA', 'seabass', 2, 255,  2, 120, 'butterfly',  'Almaria', 1);
+('EXP-240',    'Export GG Salmon 240g',          'ALMARIA', 'salmon',  2, 240,  2, 120, 'center_cut', 'Export', 1),
+('EXP-SC220',  'Export GG Chilli Marinade 220g', 'ALMARIA', 'salmon',  2, 220,  1, 220, 'marinade',   'Export', 1),
+('EXP-SB360',  'Export Seabass 360g',            'ALMARIA', 'seabass', 2, 360,  2, 180, 'center_cut', 'Export', 1),
+('EXP-BF255',  'Export Butterfly Seabass 255g',  'ALMARIA', 'seabass', 2, 255,  2, 120, 'butterfly',  'Export', 1);
 
 
 -- ── INTAKE GRADES ─────────────────────────────────────────
 -- Defines what raw material grade can produce what tier
 DROP TABLE IF EXISTS production.intake_grades;
 CREATE TABLE production.intake_grades (
-    grade           VARCHAR(10) PRIMARY KEY,     -- 'RSPCA', 'GG'
+    grade           VARCHAR(10) PRIMARY KEY,     -- 'Premium', 'GG'
     description     VARCHAR(100),
     max_tier        INT NOT NULL,                -- highest tier this grade can produce
-    can_produce_t1  BIT DEFAULT 0,               -- can this go into RSPCA products?
+    can_produce_t1  BIT DEFAULT 0,               -- can this go into Premium products?
     can_produce_t2  BIT DEFAULT 1,
     can_produce_t3  BIT DEFAULT 1
 );
 
 INSERT INTO production.intake_grades VALUES
-('RSPCA', 'RSPCA certified salmon — can cascade to all tiers', 1, 1, 1, 1),
+('Premium', 'Premium certified salmon — can cascade to all tiers', 1, 1, 1, 1),
 ('GG',    'Standard grade — Tier 2 and 3 only',                2, 0, 1, 1);
 
 
@@ -69,7 +69,7 @@ CREATE TABLE production.run_inputs (
     input_id        INT IDENTITY PRIMARY KEY,
     run_number      VARCHAR(10) NOT NULL,
     batch_code      VARCHAR(30) NOT NULL,
-    grade           VARCHAR(10) NOT NULL,        -- 'RSPCA' or 'GG'
+    grade           VARCHAR(10) NOT NULL,        -- 'Premium' or 'GG'
     species         VARCHAR(20),
     qty_kg          DECIMAL(10,2),
     intake_date     DATE,
@@ -134,15 +134,15 @@ CREATE TABLE production.compliance_rules (
 );
 
 INSERT INTO production.compliance_rules VALUES
-(1, 'NO_GG_IN_RSPCA',
+(1, 'NO_GG_IN_Premium',
    'SELECT * FROM run_outputs WHERE source_grade = ''GG'' AND tier = 1',
-   'CRITICAL', 'GG grade material packed into RSPCA Tier 1 product'),
-(2, 'NO_TAILS_IN_RSPCA',
+   'CRITICAL', 'GG grade material packed into Premium Tier 1 product'),
+(2, 'NO_TAILS_IN_Premium',
    'SELECT * FROM run_outputs WHERE piece_type = ''tail'' AND tier = 1',
-   'CRITICAL', 'Tail pieces packed into RSPCA product'),
+   'CRITICAL', 'Tail pieces packed into Premium product'),
 (3, 'SPECIES_MISMATCH',
    'SELECT o.* FROM run_outputs o JOIN product_catalogue p ON o.product_code = p.product_code JOIN run_inputs i ON o.run_number = i.run_number WHERE i.species != p.species',
    'CRITICAL', 'Salmon batch packed into seabass product or vice versa'),
-(4, 'SIMPLY_SALMON_NOT_RSPCA',
-   'SELECT * FROM run_outputs WHERE product_code = ''GG-SS'' AND source_grade = ''RSPCA'' AND tier != 3',
+(4, 'SIMPLY_SALMON_NOT_Premium',
+   'SELECT * FROM run_outputs WHERE product_code = ''GG-SS'' AND source_grade = ''Premium'' AND tier != 3',
    'MAJOR', 'Simply Salmon must always be GG tier 3');

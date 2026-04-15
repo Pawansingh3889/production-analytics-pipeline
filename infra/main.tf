@@ -20,7 +20,7 @@ resource "docker_container" "erp_sandbox" {
 
   env = [
     "ACCEPT_EULA=Y",
-    "SA_PASSWORD=SandboxP@ss123",
+    "SA_PASSWORD=DemoPass123!",
     "MSSQL_PID=Developer"
   ]
 
@@ -56,7 +56,7 @@ resource "docker_container" "api" {
   }
 
   env = [
-    "SOURCE_DB=mssql+pyodbc://pipeline_reader:R3adOnly!Pass@erp_sandbox/production_dw?driver=ODBC+Driver+17+for+SQL+Server",
+    "SOURCE_DB=mssql+pyodbc://pipeline_reader:ReadOnly123!@erp_sandbox/production_dw?driver=ODBC+Driver+17+for+SQL+Server",
     "TARGET_DB=sqlite:///data/production_dw.db"
   ]
 

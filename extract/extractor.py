@@ -46,7 +46,7 @@ def extract_table(
     """Extract rows from a single ERP table.
 
     Args:
-        table: Source table name (e.g. 'RunNumber', 'SI_OCM_TRANS')
+        table: Source table name (e.g. 'RunNumber', 'erp_transactions')
         columns: Columns to extract (never SELECT *)
         watermark_col: Column used for incremental loading
         watermark_value: Only rows where watermark_col > this value

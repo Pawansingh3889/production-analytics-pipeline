@@ -22,18 +22,18 @@ Shift managers in fish processing factories rely on delayed Excel reports and ma
 | Daily rows processed | 15,000+ |
 | API endpoints | 11 (FastAPI) |
 | Automated tests | 53 |
-| Data sources | 4 SI Integreater tables |
+| Data sources | 4 ERP tables |
 | Dashboards | Next.js (live) + Power BI (export) |
 | Orchestration | Prefect with retry logic |
 
 ---
 
-Incremental ETL pipeline for fish production data. Extracts from legacy ERP tables, validates with Pydantic, transforms with dbt. Handles batch-centric production runs (one batch, multiple products), waterfall yield tracking across RSPCA/GG/Almaria tiers, batch lineage for OCM scan-back traceability, shelf life management (0/+1/+2/+3 adjustments), and paperwork digitisation.
+Incremental ETL pipeline for fish production data. Extracts from legacy ERP tables, validates with Pydantic, transforms with dbt. Handles batch-centric production runs (one batch, multiple products), waterfall yield tracking across Premium/GG/Export tiers, batch lineage for OCM scan-back traceability, shelf life management (0/+1/+2/+3 adjustments), and paperwork digitisation.
 
 ## Architecture
 
 ```
-SI Integreater (ERP)
+ERP (ERP)
     |
     v
 [Extract] --- extract/incremental.py, Pydantic validation
@@ -78,7 +78,7 @@ dbt staging models clean and enrich raw data; mart models aggregate into analysi
 
 ### Batch-Centric Runs
 
-One batch feeds one production run, and multiple products come out of that single run (e.g. RSPCA 120g, RSPCA 240g, GG 280g, Family Pack). The batch code ties every output product back to its source material.
+One batch feeds one production run, and multiple products come out of that single run (e.g. Premium 120g, Premium 240g, GG 280g, Family Pack). The batch code ties every output product back to its source material.
 
 Exception products (Family Pack, marinades, Simply Salmon) use separate runs where multiple batch codes are documented on the paperwork. These require explicit batch-to-run mapping during data entry.
 
@@ -88,11 +88,11 @@ Production follows a three-tier waterfall where raw material cascades downward t
 
 | Tier | Examples | Notes |
 |---|---|---|
-| Tier 1 (RSPCA) | 120g premium, 240g portions | Highest certification, allocated first |
+| Tier 1 (Premium) | 120g premium, 240g portions | Highest certification, allocated first |
 | Tier 2 (GG) | 140g standard, marinades | Standard tier plus value-added |
-| Tier 3 (Almaria / Simply Salmon) | Simply Salmon catch-all | Absorbs remaining material |
+| Tier 3 (Export / Simply Salmon) | Simply Salmon catch-all | Absorbs remaining material |
 
-**Golden rule:** RSPCA material cascades down to GG or Almaria, but GG material never goes up to RSPCA. Tails are never packed into RSPCA products.
+**Golden rule:** Premium material cascades down to GG or Export, but GG material never goes up to Premium. Tails are never packed into Premium products.
 
 ### Shelf Life
 
@@ -118,8 +118,8 @@ Automated checks run against every production run:
 
 | Check | Severity | Description |
 |---|---|---|
-| GG batch in RSPCA product | CRITICAL | GG-certified material must not appear in RSPCA-labelled output |
-| Tails in RSPCA product | CRITICAL | Tail cuts are excluded from RSPCA tier products |
+| GG batch in Premium product | CRITICAL | GG-certified material must not appear in Premium-labelled output |
+| Tails in Premium product | CRITICAL | Tail cuts are excluded from Premium tier products |
 | Species mismatch | CRITICAL | Product species must match the batch species declaration |
 | OCM scan-back without parent mapping | MAJOR | Every OCM label must trace back to a parent batch code |
 | Yield below 90% | WARNING | Flags runs with unusually low yield for investigation |
@@ -359,7 +359,7 @@ n8n provides a visual workflow editor for non-technical users (shift managers, p
 make n8n-start    # start n8n container
 ```
 
-Open [http://localhost:5678](http://localhost:5678) (admin / production2026). Requires the FastAPI backend running on port 8000.
+Open [http://localhost:5678](http://localhost:5678) (admin / demo2026). Requires the FastAPI backend running on port 8000.
 
 ### Suggested Workflows
 

@@ -1,6 +1,6 @@
 -- ============================================================
 -- Fish Production ERP Schema (Mock)
--- Based on SI Integreater OCM module patterns
+-- Based on ERP OCM module patterns
 -- ============================================================
 
 CREATE SCHEMA IF NOT EXISTS production;
@@ -18,11 +18,11 @@ CREATE TABLE production.prod_lines (
 
 -- ── PRODUCTS / PLU (Price Look-Up) ────────────────────────
 CREATE TABLE production.products (
-    product_code    VARCHAR(20) PRIMARY KEY,     -- matches SI_OCM_PLU
+    product_code    VARCHAR(20) PRIMARY KEY,     -- matches erp_products
     description     VARCHAR(200) NOT NULL,
     category        VARCHAR(50),                 -- 'cod fillet', 'salmon portion', 'fish cake'
     species         VARCHAR(50),                 -- 'cod', 'salmon', 'haddock', 'mackerel'
-    customer        VARCHAR(50),                 -- 'Lidl', 'Iceland', 'Tesco', 'M&S'
+    customer        VARCHAR(50),                 -- 'Customer A', 'Customer B', 'Customer C', 'Customer D'
     pack_size_g     DECIMAL(8,2),
     shelf_life_days INT,
     allergens       VARCHAR(200),                -- 'fish, mustard, sulphites'
@@ -59,7 +59,7 @@ CREATE TABLE production.runs (
 
 -- ── PRODUCTION TRANSACTIONS (per-pack weights) ────────────
 CREATE TABLE production.transactions (
-    trans_id        BIGINT IDENTITY PRIMARY KEY,  -- matches SI_OCM_TRANS
+    trans_id        BIGINT IDENTITY PRIMARY KEY,  -- matches erp_transactions
     run_number      VARCHAR(10) REFERENCES production.runs(run_number),
     trans_date      DATETIME NOT NULL,
     product_code    VARCHAR(20),

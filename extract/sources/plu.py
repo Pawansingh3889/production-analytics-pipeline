@@ -1,4 +1,4 @@
-"""Extract SI_OCM_PLU — product master / price look-up."""
+"""Extract erp_products — product master / price look-up."""
 
 COLUMNS = [
     "PLUNumber",
@@ -13,6 +13,6 @@ COLUMNS = [
     "Updated",
 ]
 
-TABLE = "SI_OCM_PLU"
+TABLE = "erp_products"
 WATERMARK_COLUMN = "Updated"
 TARGET_TABLE = "raw_products"

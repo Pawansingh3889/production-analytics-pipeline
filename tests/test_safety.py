@@ -61,4 +61,4 @@ class TestValidateExtraction:
         _validate_extraction("RunNumber", ["Description"], "Updated")
 
     def test_normal_columns_pass(self):
-        _validate_extraction("SI_OCM_TRANS", ["TransNo", "RunNumber", "Weight"], "TransDate")
+        _validate_extraction("erp_transactions", ["TransNo", "RunNumber", "Weight"], "TransDate")
