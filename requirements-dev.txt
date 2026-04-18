@@ -1,0 +1,11 @@
+# Development-only dependencies — not needed at runtime.
+# Install with: pip install -r requirements-dev.txt
+# (Includes everything in requirements.txt.)
+-r requirements.txt
+
+# Integration tests hit the running FastAPI app over HTTP. ScanAPI
+# (https://github.com/scanapi/scanapi, MIT, maintained by Camila Maia
+# and the ScanAPI org) drives the calls from a YAML spec and writes an
+# HTML report to scanapi-report/. Complements the in-process FastAPI
+# TestClient tests.
+scanapi>=2.12.0
