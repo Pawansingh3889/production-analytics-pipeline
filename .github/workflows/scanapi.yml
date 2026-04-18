@@ -1,0 +1,90 @@
+name: ScanAPI integration tests
+
+# Runs ScanAPI (https://github.com/scanapi/scanapi) against a live
+# uvicorn serving api.main:app. Complements the in-process TestClient
+# tests by exercising real HTTP / middleware / serialisation.
+#
+# Advisory (``continue-on-error: true``) until the spec stabilises,
+# then flip to required.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  scanapi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install runtime dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install ScanAPI via pipx (isolated venv)
+        # ScanAPI pins MarkupSafe==2.1.2 and rich==14.0.0, which collide
+        # with Prefect + FastAPI transitive deps if installed into the
+        # same venv. pipx puts ScanAPI in its own sandbox and on PATH.
+        run: |
+          python -m pip install --user pipx
+          python -m pipx ensurepath
+          python -m pipx install 'scanapi>=2.12.0'
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Seed the synthetic mock ERP
+        # The FastAPI app reads from a SQLite target configured to the
+        # mock ERP seed. Prod deploys point at a real SQL Server.
+        run: |
+          if [ -f scripts/seed_mock_erp.py ]; then
+            python scripts/seed_mock_erp.py
+          fi
+
+      - name: Start FastAPI in the background
+        run: |
+          python -m uvicorn api.main:app --host 127.0.0.1 --port 8000 > /tmp/uvicorn.log 2>&1 &
+          echo $! > /tmp/uvicorn.pid
+          for _ in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:8000/health > /dev/null; then
+              echo "api up"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Run ScanAPI
+        continue-on-error: true
+        env:
+          BASE_URL: http://127.0.0.1:8000
+        run: scanapi run scanapi/scanapi.yaml -o scanapi-report/scanapi-report.html
+
+      - name: Upload ScanAPI report as artefact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scanapi-report
+          path: scanapi-report/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Print uvicorn log on failure
+        if: failure()
+        run: |
+          echo "::group::uvicorn log"
+          cat /tmp/uvicorn.log || true
+          echo "::endgroup::"
+
+      - name: Stop FastAPI
+        if: always()
+        run: |
+          if [ -f /tmp/uvicorn.pid ]; then
+            kill "$(cat /tmp/uvicorn.pid)" 2>/dev/null || true
+          fi
