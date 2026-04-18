@@ -1,6 +1,7 @@
 ![CI](https://github.com/Pawansingh3889/production-analytics-pipeline/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue)
 ![dbt](https://img.shields.io/badge/dbt-1.11-orange)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue)](LICENSE)
 
 # Production Analytics Pipeline
 
@@ -10,6 +11,7 @@
 - [Dashboard](http://localhost:3000) (when running)
 - [n8n Workflows](http://localhost:5678) (when running)
 - [Profile](https://github.com/Pawansingh3889)
+- **Contributing:** [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`GOVERNANCE.md`](GOVERNANCE.md) · [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) · [`SECURITY.md`](SECURITY.md) · [`NOTICE`](NOTICE)
 
 ## What Problem Does This Solve?
 
