@@ -389,3 +389,39 @@ All workflows connect to the FastAPI backend (`http://localhost:8000`). Build th
 | Error monitoring | Sentry (opt-in via `SENTRY_DSN`) |
 | Dashboard | Next.js 15 + Tailwind CSS + Recharts |
 | Language | Python 3.11+ |
+
+## Design decisions
+
+### Why single-node processing (and not Spark)?
+
+This pipeline extracts ~15 000 rows per day from one fish factory's ERP.
+Even over ten years of daily retention the dataset stays well below the
+single-machine limit — a mid-range laptop has enough RAM to hold every
+production run the factory will ever ship.
+
+At that scale, a Spark cluster adds overhead without proportional benefit:
+
+- **Cluster startup cost** dominates the per-run time when the pipeline
+  itself takes under a minute.
+- **JVM ↔ Python serialisation** (PySpark UDFs, Arrow conversion) eats
+  CPU cycles that a single-process pipeline doesn't spend.
+- **Operational complexity** — one more moving part to monitor, patch,
+  and pay for.
+
+dbt handles the transformation layer as set-based SQL pushed down to the
+warehouse; SQLAlchemy handles extraction; neither needs distributed
+compute at this volume. If the factory ever scales by a factor of 100
+(or the pipeline starts serving multiple factories simultaneously), the
+honest reassessment is probably **Polars first, Spark only if Polars
+can't keep up** — the "come for the speed, stay for the API" trade-off
+landed well in Jonas Böer's PyCon DE 2026 talk on single-node
+processing, and the existing dbt layer would port over with minimal
+change.
+
+### Why dbt over raw SQL scripts?
+
+dbt's staging → mart layering makes the compliance logic (GG-in-Premium,
+tails-in-Premium, species mismatch) testable in isolation from the extract
+step. Tests run in the warehouse where the data already lives, so a broken
+assumption surfaces on the data that actually exists — not on a synthetic
+fixture that drifted from production months ago.
