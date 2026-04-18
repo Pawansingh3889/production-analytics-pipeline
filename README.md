@@ -289,6 +289,32 @@ Swagger docs at [http://localhost:8000/docs](http://localhost:8000/docs).
 | GET | `/shelf-life/expiring` | Products approaching day-12 freeze-down |
 | POST | `/pipeline/run` | Trigger pipeline extraction (`?full=true` for full reload) |
 
+### Integration tests (ScanAPI)
+
+Two layers of coverage over the FastAPI surface:
+
+- **Unit / in-process** — `tests/` uses FastAPI's `TestClient`. Fast,
+  runs in the main test job.
+- **Integration / real HTTP** — `scanapi/scanapi.yaml` drives every
+  endpoint over the wire via [ScanAPI](https://github.com/scanapi/scanapi)
+  (by Camila Maia and the ScanAPI org, MIT). Catches middleware /
+  serialisation / CORS bugs that `TestClient` skips. Runs via
+  `make scanapi` locally, or the dedicated `ScanAPI integration tests`
+  workflow on every push / PR.
+
+ScanAPI is installed via **pipx** rather than pip because of strict
+pin collisions (`MarkupSafe==2.1.2`, `rich==14.0.0`). See
+`requirements-dev.txt` for the rationale; `make setup-dev` does the
+pipx install automatically.
+
+```bash
+make scanapi                                       # local
+make scanapi BASE_URL=https://staging.example.com  # hit a deploy
+```
+
+Report lands in `scanapi-report/` (gitignored). CI uploads it as a
+14-day artefact on every run.
+
 ## Error Monitoring
 
 Optional Sentry integration for error tracking. Disabled by default (no-op if `SENTRY_DSN` is not set).
