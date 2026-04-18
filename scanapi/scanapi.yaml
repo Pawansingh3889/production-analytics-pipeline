@@ -1,0 +1,151 @@
+# ScanAPI integration tests — drives the running FastAPI app over HTTP.
+#
+# Run with: ``make scanapi`` (starts uvicorn, runs ScanAPI, tears down).
+# Base URL defaults to http://127.0.0.1:8000; override via BASE_URL so
+# the same spec can run against a staging deploy.
+#
+# Pattern reference: Camila Maia's "Designing and scaling a Python
+# library in the open" (PyCon DE 2026). ScanAPI is at
+# https://github.com/scanapi/scanapi, MIT-licensed.
+#
+# Tests favour shape checks over value checks — the synthetic seed data
+# drifts with every seed_mock_erp run, but the column sets and response
+# types are stable contracts and should not change silently.
+
+endpoints:
+  - name: production-analytics-api
+    path: ${BASE_URL}
+    headers:
+      accept: application/json
+    requests:
+      # ── Service health ─────────────────────────────────────────
+      - name: health
+        path: /health
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_json
+            assert: ${{ "application/json" in response.headers.get("content-type", "") }}
+          - name: reports_table_count
+            assert: ${{ "table_count" in response.json() or "status" in response.json() }}
+
+      # ── Yield tabs ─────────────────────────────────────────────
+      - name: yield_daily_default
+        path: /yield/daily
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_list
+            assert: ${{ isinstance(response.json(), list) }}
+
+      - name: yield_daily_custom_window
+        path: /yield/daily
+        method: get
+        query:
+          days: "30"
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_list
+            assert: ${{ isinstance(response.json(), list) }}
+
+      - name: yield_daily_out_of_range_rejected
+        path: /yield/daily
+        method: get
+        query:
+          days: "9999"
+        tests:
+          # Pydantic/FastAPI validation caps `days` at 365 — out-of-range
+          # returns 422 (Unprocessable Entity). This asserts the guard rail
+          # still exists.
+          - name: status_is_422
+            assert: ${{ response.status_code == 422 }}
+
+      - name: yield_by_line
+        path: /yield/by-line
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_list
+            assert: ${{ isinstance(response.json(), list) }}
+
+      # ── Traceability ───────────────────────────────────────────
+      - name: trace_missing_batch_is_404
+        path: /trace/NO_SUCH_BATCH
+        method: get
+        tests:
+          - name: status_is_404
+            assert: ${{ response.status_code == 404 }}
+
+      # ── Runs ───────────────────────────────────────────────────
+      - name: runs_active
+        path: /runs/active
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_list
+            assert: ${{ isinstance(response.json(), list) }}
+
+      - name: run_detail_missing_is_404
+        path: /runs/NO_SUCH_RUN
+        method: get
+        tests:
+          - name: status_is_404
+            assert: ${{ response.status_code == 404 }}
+
+      # ── Compliance ─────────────────────────────────────────────
+      - name: compliance_checks
+        path: /compliance/checks
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_list
+            assert: ${{ isinstance(response.json(), list) }}
+
+      - name: temperature_breaches_default
+        path: /temperature/breaches
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_list
+            assert: ${{ isinstance(response.json(), list) }}
+
+      - name: temperature_breaches_72h
+        path: /temperature/breaches
+        method: get
+        query:
+          hours: "72"
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+
+      # ── Products ───────────────────────────────────────────────
+      - name: product_catalogue
+        path: /products
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_list
+            assert: ${{ isinstance(response.json(), list) }}
+
+      - name: shelf_life_expiring
+        path: /shelf-life/expiring
+        method: get
+        tests:
+          - name: status_is_200
+            assert: ${{ response.status_code == 200 }}
+          - name: returns_list
+            assert: ${{ isinstance(response.json(), list) }}
+
+      # ── Pipeline control (POST) ────────────────────────────────
+      # Deliberately NOT calling /pipeline/run in scanapi — it triggers a
+      # real extraction against the configured source. An integration
+      # test that fires it every push would mask incident signals from
+      # scheduled runs. Covered by TestClient tests + Prefect retries.

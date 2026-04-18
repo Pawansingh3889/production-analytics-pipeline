@@ -1,11 +1,20 @@
 # Development-only dependencies — not needed at runtime.
 # Install with: pip install -r requirements-dev.txt
-# (Includes everything in requirements.txt.)
+# (Already includes everything in requirements.txt.)
 -r requirements.txt
 
-# Integration tests hit the running FastAPI app over HTTP. ScanAPI
-# (https://github.com/scanapi/scanapi, MIT, maintained by Camila Maia
-# and the ScanAPI org) drives the calls from a YAML spec and writes an
-# HTML report to scanapi-report/. Complements the in-process FastAPI
-# TestClient tests.
-scanapi>=2.12.0
+# NOTE: ScanAPI is NOT listed here. It pins MarkupSafe==2.1.2 and
+# rich==14.0.0 as strict ``==`` requirements that collide with
+# transitive deps of this repo (Prefect, FastAPI, and others).
+# Installing them into the same venv fails pip resolution.
+#
+# ScanAPI is a CLI tool, not something imported by this codebase, so
+# install it via pipx into its own venv — the CLI works the same and
+# the app environment stays clean:
+#
+#   python -m pip install --user pipx
+#   python -m pipx ensurepath
+#   python -m pipx install 'scanapi>=2.12.0'
+#
+# The Makefile ``scanapi`` target invokes ``scanapi`` on PATH, which
+# pipx sets up automatically on first ``ensurepath`` call.

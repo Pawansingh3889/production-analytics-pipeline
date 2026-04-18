@@ -14,3 +14,7 @@ data/
 # Dashboard
 dashboard/node_modules/
 dashboard/.next/
+
+# ScanAPI — regenerated HTML report
+scanapi-report/
+scanapi-report.html
